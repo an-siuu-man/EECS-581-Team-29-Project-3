@@ -2,49 +2,62 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label"
-import { MouseEventHandler, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-// import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
+import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 
 export default function Login() {
-
     const router = useRouter();
-    const [ userId, setUserId ] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState("");
-    const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const supabase = createClient();
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setIsLoading(true);
+
         try {
-          const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              onlineID: userId,
-              password: password,
-            }),
-          });
-          if (!response.ok) {
-            const errorData = await response.json();
-            toast.error(errorData.message || response.statusText, {
-              style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
-              duration: 3000,
-              icon: '❌',
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
             });
-            console.error("Login failed:", errorData.message || response.statusText);
-            return;
-          }
-  
-          setUserId(userId);
-  
-          router.push('/builder');
+
+            if (error) {
+                toast.error('Login Failed', {
+                    style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+                    description: error.message,
+                    duration: 3000,
+                    icon: <XCircle className="h-5 w-5" />,
+                });
+                return;
+            }
+
+            if (data.user) {
+                toast.success('Login Successful', {
+                    style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+                    description: 'Redirecting to builder...',
+                    duration: 2000,
+                    icon: <CheckCircle2 className="h-5 w-5" />,
+                });
+                router.push('/builder');
+                router.refresh();
+            }
         } catch (error) {
-          console.error("Network or server error:", error);
+            console.error("Login error:", error);
+            toast.error('Error', {
+                style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+                description: 'An unexpected error occurred',
+                duration: 3000,
+                icon: <AlertTriangle className="h-5 w-5" />,
+            });
+        } finally {
+            setIsLoading(false);
         }
-      };
-      
+    };
 
 
     return (
@@ -64,19 +77,44 @@ export default function Login() {
                 <div className="login-form flex flex-col justify-center items-center w-fit border border-[#404040] p-10 rounded-lg">
                     <div className="form-header w-full flex flex-col justify-start items-start mb-2">
                         <h1 className="text-3xl font-bold font-dmsans mb-2 ">Login</h1>
-                        <h2 className="text-[#A8A8A8] text-xs font-inter mb-4">Please enter your Online ID and password to continue</h2>
+                        <h2 className="text-[#A8A8A8] text-xs font-inter mb-4">Please enter your email and password to continue</h2>
                     </div>
-                    <form className="flex flex-col gap-4 w-96">
+                    <form className="flex flex-col gap-4 w-96" onSubmit={handleSubmit}>
                       <div className="w-full flex justify-between items-center -mb-1">
-                        <Label htmlFor="username" className="text-sm font-inter -mb-1">Online ID</Label>
+                        <Label htmlFor="email" className="text-sm font-inter -mb-1">Email</Label>
                       </div>
-                        <Input type="text" value = {userId} onChange = {(e) => {setUserId(e.target.value)}} id="onlineid" placeholder="a123b456" className={`font-inter selection:bg-blue-400 border-[#404040] border-2`} required />
+                        <Input 
+                          type="email" 
+                          value={email} 
+                          onChange={(e) => setEmail(e.target.value)} 
+                          id="email" 
+                          placeholder="your.email@example.com" 
+                          className={`font-inter selection:bg-blue-400 border-[#404040] border-2`} 
+                          required 
+                          disabled={isLoading}
+                        />
 
                         <div className="w-full flex justify-between items-center -mb-1">
                         <Label htmlFor="password" className="text-sm font-inter -mb-1">Password</Label>
                         </div>
-                        <Input type="password" value = {password} onChange = {(e) => {setPassword(e.target.value)}} id='password' placeholder='********' className={`font-inter selection:bg-blue-400 border-[#404040] border-2`} required />
-                         <Button type="submit" variant={'secondary'}  onClick={handleSubmit} className={`cursor-pointer font-dmsans text-md my-3`}>Login</Button>
+                        <Input 
+                          type="password" 
+                          value={password} 
+                          onChange={(e) => setPassword(e.target.value)} 
+                          id='password' 
+                          placeholder='********' 
+                          className={`font-inter selection:bg-blue-400 border-[#404040] border-2`} 
+                          required 
+                          disabled={isLoading}
+                        />
+                         <Button 
+                          type="submit" 
+                          variant={'secondary'} 
+                          className={`cursor-pointer font-dmsans text-md my-3`}
+                          disabled={isLoading}
+                         >
+                          {isLoading ? 'Logging in...' : 'Login'}
+                         </Button>
                     </form>
                     <div className="text-[#a8a8a8] text-xs mt-3 font-inter">Don't have an account with us? <Link href={'/signup'} className="font-medium text-white font-inter">Sign up</Link></div>
                 </div>
