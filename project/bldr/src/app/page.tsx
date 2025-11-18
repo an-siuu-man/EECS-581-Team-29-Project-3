@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -14,7 +14,25 @@ export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const supabase = createClient();
+
+    useEffect(() => {
+        const checkUser = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    router.push('/builder');
+                }
+            } catch (error) {
+                console.error('Error checking authentication:', error);
+            } finally {
+                setIsCheckingAuth(false);
+            }
+        };
+
+        checkUser();
+    }, [router, supabase.auth]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -59,6 +77,17 @@ export default function Login() {
         }
     };
 
+
+    if (isCheckingAuth) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="text-center">
+                    <h2 className="text-2xl font-dmsans mb-2">Loading...</h2>
+                    <p className="text-[#A8A8A8] font-inter">Please wait</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="landing-page ">
