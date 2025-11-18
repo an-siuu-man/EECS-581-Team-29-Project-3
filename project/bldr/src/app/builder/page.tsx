@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { LogOut, AlertCircle } from 'lucide-react';
+import ClassSearch from '@/components/ClassSearch';
 
 export default function Builder() {
   const { user, loading, signOut } = useAuth();
@@ -79,11 +80,17 @@ export default function Builder() {
           </Button>
         </div>
 
-        <div className="border border-[#404040] rounded-lg p-8">
-          <h2 className="text-2xl font-dmsans font-bold mb-4">Your Schedule</h2>
-          <p className="text-[#A8A8A8] font-inter">
-            Start building your schedule here...
-          </p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <div className="border border-[#404040] rounded-lg p-8">
+            <h2 className="text-2xl font-dmsans font-bold mb-4">Your Schedule</h2>
+            <p className="text-[#A8A8A8] font-inter">
+              Start building your schedule here...
+            </p>
+          </div>
+
+          <div className="flex justify-center">
+            <ClassSearch />
+          </div>
         </div>
       </div>
     </div>
