@@ -1,35 +1,56 @@
 // Class and Section related types
 
+/**
+ * Represents a class section - used for both UI display and schedule storage
+ */
 export interface ClassSection {
   uuid: string;
-  classID: string;
+  classID: string;                 // Maps to classid from database
+  dept: string;
+  code: string;
+  title: string;
   days: string;
   starttime: string;
   endtime: string;
-  component: string;
+  component: string;               // e.g., 'LEC', 'LAB'
   instructor?: string;
-  seats_available: number;
+  seats_available?: number;        // Maps to availseats
+  credithours?: number;
+  location?: string;
+  room?: string;
 }
 
+/**
+ * Represents grouped class data (multiple sections of the same course)
+ */
 export interface ClassData {
   dept: string;
   code: string;
   title: string;
-  description?: string;
+  description?: string;            // Not in DB, fetched from external API
   sections: ClassSection[];
 }
 
+/**
+ * Response from getClassInfo API
+ */
 export interface ClassInfoResponse {
   data: ClassData[];
 }
 
+/**
+ * Props for the Class component
+ */
 export interface ClassProps {
   uuid: string;
   dept: string;
   classcode: string;
+  onSectionClick?: (section: ClassSection, classData: ClassData) => void;
 }
 
-// Selected/Searched class types
+/**
+ * Represents a selected class (legacy/simplified format)
+ */
 export interface SelectedClass {
   classID: string;
   className: string;
@@ -41,6 +62,9 @@ export interface SelectedClass {
   instructor?: string;
 }
 
+/**
+ * Represents a searched class result from the search API
+ */
 export interface SearchedClass {
   uuid: string;
   code?: string;
@@ -51,15 +75,24 @@ export interface SearchedClass {
   days?: string;
 }
 
-// Calendar/Schedule class item
+/**
+ * Represents a class item in the calendar/schedule view
+ */
 export interface CalendarClassItem {
+  uuid?: string;                   // From allclasses
+  classID?: string;                // Maps to classid
   days: string;
-  startTimeInDecimal: number;
-  duration: number;
-  color?: string;
+  startTimeInDecimal: number;      // Calculated from starttime
+  duration: number;                // Calculated from starttime and endtime
+  color?: string;                  // UI-specific
   dept: string;
   code: string;
-  instructor: string;
-  section?: string;
-  credits?: number;
+  title?: string;
+  instructor?: string;
+  component?: string;              // e.g., 'LEC', 'LAB'
+  starttime?: string;              // Original time string
+  endtime?: string;                // Original time string
+  credithours?: number;            // Maps to credithours
+  location?: string;
+  room?: string;
 }

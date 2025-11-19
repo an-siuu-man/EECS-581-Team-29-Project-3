@@ -9,7 +9,12 @@ import { SearchedClass } from "@/types";
 // import { useAuth } from "@/context/AuthContext";
 import Class from "./Class";
 import NewClass from "@/components/NewClass";
+import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
+
 export default function ClassSearch() {
+    // Get schedule builder context
+    const { draftSchedule, addClassToDraft, removeClassFromDraft } = useScheduleBuilder();
+    
     // Fallback local state (was previously coming from a context like useAuth)
     const [userId, setUserId] = useState<string | null>(null);
     const [selectedClasses, setSelectedClasses] = useState<SearchedClass[]>([]);
@@ -139,11 +144,24 @@ export default function ClassSearch() {
                                 ) : (
                                     selectedClasses.map(c => (
                                         <Class
-                                            
                                             key={c.uuid}
                                             uuid={c.uuid}
                                             classcode={c.code || ''}
                                             dept={c.dept || ''}
+                                            onSectionClick={(section, classData) => {
+                                                addClassToDraft({
+                                                    uuid: section.uuid,
+                                                    classID: section.classID,
+                                                    dept: classData.dept,
+                                                    code: classData.code,
+                                                    title: classData.title,
+                                                    days: section.days,
+                                                    starttime: section.starttime,
+                                                    endtime: section.endtime,
+                                                    component: section.component,
+                                                    instructor: section.instructor,
+                                                });
+                                            }}
                                         />
                                     ))
                                 )}
@@ -153,8 +171,27 @@ export default function ClassSearch() {
                         {/* Currently Added Section */}
                         <AccordionItem value="item-2">
                             <AccordionTrigger className="text-lg text-purple-400 font-bold hover:no-underline hover:cursor-pointer">Currently Selected</AccordionTrigger>
-                            <AccordionContent>
+                            <AccordionContent className="font-inter max-h-[300px] overflow-y-auto">
+                                {draftSchedule.length === 0 ? (
                                     <div className="text-sm text-[#888888] font-figtree">No classes added</div>
+                                ) : (
+                                    draftSchedule.map((c: any, index: number) => (
+                                        <div key={index} className="relative group">
+                                            <Class
+                                                uuid={c.uuid || c.classID}
+                                                classcode={c.code || c.classcode || ''}
+                                                dept={c.dept || ''}
+                                            />
+                                            <button
+                                                onClick={() => removeClassFromDraft(index)}
+                                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                                title="Remove class"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>

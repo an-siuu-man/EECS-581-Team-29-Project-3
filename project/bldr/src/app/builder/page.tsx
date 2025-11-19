@@ -7,6 +7,8 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { LogOut, AlertCircle } from 'lucide-react';
 import ClassSearch from '@/components/ClassSearch';
+import { Sidebar } from '@/components/Sidebar';
+import CalendarEditor from '@/components/CalendarEditor';
 
 export default function Builder() {
   const { user, loading, signOut } = useAuth();
@@ -54,42 +56,49 @@ export default function Builder() {
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-figtree font-semibold mb-2">
-              <span className="font-dmsans font-bold">
-                <span className="text-white">b</span>
-                <span className="text-red-500">l</span>
-                <span className="text-blue-600">d</span>
-                <span className="text-yellow-300">r</span>
-              </span>
-              {' '}Schedule Builder
-            </h1>
-            <p className="text-[#A8A8A8] font-inter">
-              Welcome back, {user.email}!
-            </p>
-          </div>
-          <Button 
-            onClick={handleLogout}
-            variant="secondary"
-            className="font-dmsans cursor-pointer"
-          >
-            Logout
-          </Button>
-        </div>
+    <div className="flex min-h-screen bg-[#080808]">
+      {/* Sidebar */}
+      <Sidebar />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-          <div className="border border-[#404040] rounded-lg p-8">
-            <h2 className="text-2xl font-dmsans font-bold mb-4">Your Schedule</h2>
-            <p className="text-[#A8A8A8] font-inter">
-              Start building your schedule here...
-            </p>
+      {/* Main Content */}
+      <div className="flex-1 p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-4xl font-figtree font-semibold mb-2">
+                <span className="font-dmsans font-bold">
+                  <span className="text-white">b</span>
+                  <span className="text-red-500">l</span>
+                  <span className="text-blue-600">d</span>
+                  <span className="text-yellow-300">r</span>
+                </span>
+                {' '}Schedule Builder
+              </h1>
+              <p className="text-[#A8A8A8] font-inter">
+                Welcome back, {user.email}!
+              </p>
+            </div>
+            <Button 
+              onClick={handleLogout}
+              variant="secondary"
+              className="font-dmsans cursor-pointer"
+            >
+              Logout
+            </Button>
           </div>
 
-          <div className="flex justify-center">
-            <ClassSearch />
+          {/* Main Grid Layout */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* Calendar Section */}
+            <div className="flex justify-center items-start">
+              <CalendarEditor />
+            </div>
+
+            {/* Class Search Section */}
+            <div className="flex justify-center items-start">
+              <ClassSearch />
+            </div>
           </div>
         </div>
       </div>

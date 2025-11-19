@@ -2,7 +2,8 @@
 import React, { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
-import { CalendarClassItem } from "@/types";
+import { ClassSection } from "@/types";
+import { timeToDecimal, calculateDuration, parseDays } from "@/lib/timeUtils";
 
 const CalendarEditor = () => {
   const { draftSchedule, draftScheduleName } = useScheduleBuilder();
@@ -95,28 +96,39 @@ const CalendarEditor = () => {
                           <div className="absolute top-[50%] translate-y-[-50%] w-full border-t border-dashed border-[#424242] z-0" />
 
                           {draftSchedule
-                            .filter((cls: CalendarClassItem) => {
-                              const classDays = cls.days
-                                .split(",")
-                                .map((d: string) => d.trim());
+                            .filter((cls: ClassSection) => {
+                              const classDays = parseDays(cls.days || '');
+                              const startTime = timeToDecimal(cls.starttime || '');
                               return (
                                 classDays.includes(day) &&
-                                cls.startTimeInDecimal >= hour &&
-                                cls.startTimeInDecimal < hour + 1
+                                startTime >= hour &&
+                                startTime < hour + 1
                               );
                             })
-                            .map((cls: CalendarClassItem, idx: number) => {
+                            .map((cls: ClassSection, idx: number) => {
                               const baseRowHeight =
                                 window.innerWidth < 500 ? 32 : 44;
-                              const offset =
-                                (cls.startTimeInDecimal - hour) * baseRowHeight;
-                              const height = cls.duration * baseRowHeight;
+                              const startTime = timeToDecimal(cls.starttime || '');
+                              const duration = calculateDuration(cls.starttime || '', cls.endtime || '');
+                              const offset = (startTime - hour) * baseRowHeight;
+                              const height = duration * baseRowHeight;
+
+                              // Generate a color based on dept
+                              const colors = [
+                                'bg-yellow-300',
+                                'bg-blue-300',
+                                'bg-green-300',
+                                'bg-pink-300',
+                                'bg-purple-300',
+                                'bg-red-300',
+                              ];
+                              const colorIndex = (cls.dept?.charCodeAt(0) || 0) % colors.length;
 
                               return (
                                 <div
                                   key={idx}
                                   className={`${
-                                    cls.color || "bg-yellow-300"
+                                    colors[colorIndex]
                                   } absolute flex flex-col items-start left-0.5 right-0.5 p-0.5 rounded-md text-[#1a1a1a] shadow-md z-10 overflow-hidden`}
                                   style={{
                                     top: `${offset}px`,
@@ -127,7 +139,7 @@ const CalendarEditor = () => {
                                     {cls.dept} {cls.code}
                                   </div>
                                   <div className="text-[8px] md:text-xs font-figtree truncate">
-                                    {cls.instructor}
+                                    {cls.instructor || 'Staff'}
                                   </div>
                                 </div>
                               );

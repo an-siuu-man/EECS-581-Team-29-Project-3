@@ -2,3 +2,4 @@
 export * from './class';
 export * from './schedule';
 export * from './props';
+export * from './user';

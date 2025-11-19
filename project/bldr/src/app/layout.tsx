@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter, DM_Sans, Figtree } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ScheduleBuilderProvider } from "@/contexts/ScheduleBuilderContext";
+import { ActiveScheduleProvider } from "@/contexts/ActiveScheduleContext";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -56,10 +57,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <ScheduleBuilderProvider>
-              {children}
-              <Toaster />
-            </ScheduleBuilderProvider>
+            <ActiveScheduleProvider>
+              <ScheduleBuilderProvider>
+                {children}
+                <Toaster />
+              </ScheduleBuilderProvider>
+            </ActiveScheduleProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
