@@ -1,5 +1,3 @@
-import { execFile } from 'child_process';
-import path from 'path';
 import { supabase } from '../../lib/supabaseClient';
 
 function parseTimeToFloat(start: string, end: string): number {
@@ -29,93 +27,66 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { subject, term } = body;
 
-    if (!subject || !term) {
-      return Response.json({ error: 'Missing subject or term' }, { status: 400 });
+    if (!subject) {
+      return Response.json({ error: 'Missing subject' }, { status: 400 });
     }
 
-    const scriptPath = path.resolve('src/app/scripts/scrape_ku_classes.py');
-    const venvPython = path.resolve('src/app/scripts/myenv/Scripts/python.exe');
+    // Parse subject into dept and code (e.g., "EECS 581" -> dept="EECS", code="581")
+    const parts = subject.trim().split(/\s+/);
+    if (parts.length < 2) {
+      return Response.json({ error: 'Invalid subject format. Expected "DEPT CODE"' }, { status: 400 });
+    }
 
-    return new Promise((resolve) => {
-        execFile(venvPython, [scriptPath, subject, term], async (error, stdout) => {
-        if (error) {
-          console.error('❌ Python execution error:', error);
-          return resolve(Response.json({ error: 'Python script failed' }, { status: 500 }));
-        }
+    const dept = parts[0];
+    const code = parts[1];
 
-        try {
-          const parsed = JSON.parse(stdout);
-          const responseToFrontend = [];
+    // Fetch all sections for this course from the database
+    const { data: sections, error: fetchErr } = await supabase
+      .from('allclasses')
+      .select('*')
+      .eq('dept', dept)
+      .eq('code', code)
+      .order('component', { ascending: true })
+      .order('classid', { ascending: true });
 
-          for (const course of parsed) {
-            const courseSections = [];
-            let dbTitle = ''; // 🟢 new: to store the first valid title from DB
+    if (fetchErr) {
+      console.error('❌ Database fetch error:', fetchErr);
+      return Response.json({ error: 'Database query failed', details: fetchErr.message }, { status: 500 });
+    }
 
-            for (const section of course.sections) {
-              const classID = parseInt(section.class_number);
-              const component = section.type;
-              const available = section.seats_available.toLowerCase() === 'full' ? 0 : parseInt(section.seats_available);
-              const duration = parseTimeToFloat(section.start_time, section.end_time);
+    if (!sections || sections.length === 0) {
+      return Response.json({ success: true, data: [] }, { status: 200 });
+    }
 
-              // Fetch from DB
-              const { data: match, error: fetchErr } = await supabase
-                .from('allclasses')
-                .select('uuid, title, availseats')
-                .eq('classid', classID)
-                .eq('component', component)
-                .maybeSingle();
-
-              if (!match) {
-                console.warn(`⚠️ No match found for classID ${classID}, component ${component}`);
-                continue;
-              }
-
-              if (!dbTitle) dbTitle = match.title; // 🟢 set title once
-
-              // Only update available if changed
-              if (match.availseats !== available) {
-                await supabase
-                  .from('allclasses')
-                  .update({ availseats: available })
-                  .eq('classid', classID)
-                  .eq('component', component);
-              }
-
-              courseSections.push({
-                classID,
-                uuid: match.uuid,
-                component,
-                starttime: section.start_time,
-                endtime: section.end_time,
-                days: section.days,
-                instructor: section.instructor,
-                seats_available: available,
-                room: section.room,
-                building: section.building,
-                duration
-              });
-            }
-
-            // Push course with title from DB + sections
-            if (courseSections.length > 0) {
-              responseToFrontend.push({
-                dept: course.sections[0]?.dept || '',
-                code: course.sections[0]?.code || '',
-                title: dbTitle, // 🟢 fixed: now comes from match.title
-                description: course.description,
-                sections: courseSections
-              });
-            }
-          }
-
-          return resolve(Response.json({ success: true, data: responseToFrontend }, { status: 200 }));
-        } catch (parseErr) {
-          console.error('❌ JSON parse error:', parseErr);
-          console.error('🔎 Raw stdout:', stdout);
-          return resolve(Response.json({ error: 'Invalid JSON from Python script' }, { status: 500 }));
-        }
-      });
+    // Group sections by course
+    const courseSections = sections.map((section) => {
+      const duration = parseTimeToFloat(section.starttime || '', section.endtime || '');
+      
+      return {
+        classID: section.classid.toString(),
+        uuid: section.uuid,
+        component: section.component,
+        starttime: section.starttime,
+        endtime: section.endtime,
+        days: section.days,
+        instructor: section.instructor,
+        seats_available: section.availseats ?? 0,
+        room: section.room,
+        location: section.location,
+        duration
+      };
     });
+
+    // Build response with course info and its sections
+    const responseToFrontend = [{
+      dept: sections[0].dept,
+      code: sections[0].code,
+      title: sections[0].title,
+      description: null, // Description not stored in DB
+      sections: courseSections
+    }];
+
+    return Response.json({ success: true, data: responseToFrontend }, { status: 200 });
   } catch (err) {
     console.error('getClassInfo server error:', err);
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
