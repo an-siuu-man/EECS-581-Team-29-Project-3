@@ -3,34 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Loader  from "@/components/Loader";
-interface ClassProps {
-    uuid: string;
-    dept: string;
-    classcode: string;
-}
-
-interface Section {
-    uuid: string;
-    classID: string;
-    days: string;
-    starttime: string;
-    endtime: string;
-    component: string;
-    instructor?: string;
-    seats_available: number;
-}
-
-interface ClassData {
-    dept: string;
-    code: string;
-    title: string;
-    description?: string;
-    sections: Section[];
-}
-
-interface ClassInfoResponse {
-    data: ClassData[];
-}
+import { ClassProps, ClassSection, ClassData, ClassInfoResponse } from "@/types";
 export default function Class(props: ClassProps) {
     // const { selectedClasses, setSelectedClasses } = useAuth();
     const [selectedClasses, setSelectedClasses] = useState<any>({});
@@ -89,7 +62,7 @@ export default function Class(props: ClassProps) {
                     {classInfo.data[0].description || 'No description available.'}
                     
                 </p>
-                {classInfo.data[0].sections.map((section: Section) => (
+                {classInfo.data[0].sections.map((section: ClassSection) => (
                 <button
                     disabled={section.seats_available <= 0}
                     key={section.uuid}

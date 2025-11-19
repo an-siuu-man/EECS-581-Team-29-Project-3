@@ -5,32 +5,17 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Input } from "./ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { SearchedClass } from "@/types";
 // import { useAuth } from "@/context/AuthContext";
 import Class from "./Class";
 import NewClass from "@/components/NewClass";
 export default function ClassSearch() {
     // Fallback local state (was previously coming from a context like useAuth)
     const [userId, setUserId] = useState<string | null>(null);
-    const [selectedClasses, setSelectedClasses] = useState<Array<{
-      uuid: string;
-      code?: string;
-      title?: string;
-      dept?: string;
-      credithours?: number;
-      instructor?: string;
-      days?: string;
-    }>>([]);
+    const [selectedClasses, setSelectedClasses] = useState<SearchedClass[]>([]);
     const [activeSchedule, setActiveSchedule] = useState<any>(null);
 
-    const [classes, setClasses] = useState<Array<{
-        uuid: string;
-        code?: string;
-        title?: string;
-        dept?: string;
-        credithours?: number;
-        instructor?: string;
-        days?: string;
-    }>>([]);
+    const [classes, setClasses] = useState<SearchedClass[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false);
     useEffect(() => {
