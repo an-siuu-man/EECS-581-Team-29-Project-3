@@ -2,28 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-
-interface NewClassProps {
-    classID: string;
-    className: string;
-    dept: string;
-    code: string;
-    startTime: string;
-    endTime: string;
-    days: string;
-    instructor?: string;
-}
-
-interface SelectedClass {
-    classID: string;
-    className: string;
-    dept: string;
-    code: string;
-    startTime: string;
-    endTime: string;
-    days: string;
-    instructor?: string;
-}
+import { NewClassProps, SelectedClass } from "@/types";
 
 export default function NewClass(props: NewClassProps) {
     const [selectedClasses, setSelectedClasses] = useState<SelectedClass[]>([]);

@@ -3,34 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Loader  from "@/components/Loader";
-interface ClassProps {
-    uuid: string;
-    dept: string;
-    classcode: string;
-}
-
-interface Section {
-    uuid: string;
-    classID: string;
-    days: string;
-    starttime: string;
-    endtime: string;
-    component: string;
-    instructor?: string;
-    seats_available: number;
-}
-
-interface ClassData {
-    dept: string;
-    code: string;
-    title: string;
-    description?: string;
-    sections: Section[];
-}
-
-interface ClassInfoResponse {
-    data: ClassData[];
-}
+import { ClassProps, ClassSection, ClassData, ClassInfoResponse } from "@/types";
 export default function Class(props: ClassProps) {
     // const { selectedClasses, setSelectedClasses } = useAuth();
     const [selectedClasses, setSelectedClasses] = useState<any>({});
@@ -89,13 +62,14 @@ export default function Class(props: ClassProps) {
                     {classInfo.data[0].description || 'No description available.'}
                     
                 </p>
-                {classInfo.data[0].sections.map((section: Section) => (
+                {classInfo.data[0].sections.map((section: ClassSection) => (
                 <button
-                    disabled={section.seats_available <= 0}
+                    disabled={(section.seats_available ?? 0) <= 0}
                     key={section.uuid}
+                    onClick={() => props.onSectionClick?.(section, classInfo.data[0])}
                     className={
                         `w-full font-inter rounded-md mt-2 bg-[#181818] transition duration-100 px-3 py-2 text-left` +
-                        (section.seats_available > 0 ? " cursor-pointer hover:bg-[#232323]" : " cursor-default opacity-60")
+                        ((section.seats_available ?? 0) > 0 ? " cursor-pointer hover:bg-[#232323]" : " cursor-default opacity-60")
                     }
                     >
                     <div className="flex flex-row w-full justify-between gap-4 items-start mb-1">
