@@ -1,17 +1,19 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useScheduleBuilder } from '@/contexts/ScheduleBuilderContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { LogOut, AlertCircle } from 'lucide-react';
+import { LogOut, AlertCircle, Trash2, X, Check } from 'lucide-react';
 import ClassSearch from '@/components/ClassSearch';
 import { Sidebar } from '@/components/Sidebar';
 import CalendarEditor from '@/components/CalendarEditor';
 
 export default function Builder() {
   const { user, loading, signOut } = useAuth();
+  const { clearDraft } = useScheduleBuilder();
   const router = useRouter();
 
   useEffect(() => {
@@ -38,6 +40,47 @@ export default function Builder() {
         icon: <AlertCircle className="h-5 w-5" />,
       });
     }
+  };
+
+  const handleClearSchedule = () => {
+    toast(
+      <div className="flex flex-col gap-2">
+        <p className="font-inter text-white">Clear all classes from schedule?</p>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => {
+              clearDraft();
+              toast.dismiss();
+              toast.success('Schedule cleared', {
+                style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+                duration: 2000,
+                icon: <Trash2 className="h-5 w-5" />,
+              });
+            }}
+            className="font-dmsans"
+          >
+            <Check className="h-4 w-4 mr-1" />
+            Confirm
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => toast.dismiss()}
+            className="font-dmsans"
+          >
+            <X className="h-4 w-4 mr-1" />
+            Cancel
+          </Button>
+        </div>
+      </div>,
+      {
+        style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+        duration: Infinity, // Don't auto-dismiss
+        icon: <AlertCircle className="h-5 w-5 text-yellow-500" />,
+      }
+    );
   };
 
   if (loading) {
@@ -91,8 +134,16 @@ export default function Builder() {
           {/* Main Grid Layout */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Calendar Section */}
-            <div className="flex justify-center items-start">
+            <div className="flex flex-col items-end">
               <CalendarEditor />
+              <Button 
+                onClick={handleClearSchedule}
+                variant="destructive"
+                className="font-dmsans cursor-pointer w- max-w-[600px]"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear Schedule
+              </Button>
             </div>
 
             {/* Class Search Section */}

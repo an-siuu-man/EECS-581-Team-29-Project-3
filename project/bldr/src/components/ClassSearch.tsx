@@ -6,6 +6,7 @@ import { Input } from "./ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { SearchedClass } from "@/types";
+import { Trash2 } from "lucide-react";
 // import { useAuth } from "@/context/AuthContext";
 import Class from "./Class";
 import NewClass from "@/components/NewClass";
@@ -13,12 +14,10 @@ import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
 
 export default function ClassSearch() {
     // Get schedule builder context
-    const { draftSchedule, addClassToDraft, removeClassFromDraft } = useScheduleBuilder();
+    const { draftSchedule, removeClassFromDraft } = useScheduleBuilder();
     
     // Fallback local state (was previously coming from a context like useAuth)
-    const [userId, setUserId] = useState<string | null>(null);
     const [selectedClasses, setSelectedClasses] = useState<SearchedClass[]>([]);
-    const [activeSchedule, setActiveSchedule] = useState<any>(null);
 
     const [classes, setClasses] = useState<SearchedClass[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -99,7 +98,7 @@ export default function ClassSearch() {
                                     <path d="M20.9999 20.9999L16.6499 16.6499" stroke="#fafafa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
                                 </svg>
                             </TooltipTrigger>
-                            <TooltipContent  className="text-xs font-figtree text-[#fafafa]" side='bottom' >
+                            <TooltipContent  className="text-xs bg-accent font-figtree text-[#fafafa]" side='bottom' >
                                 <p>Search class</p>
                             </TooltipContent>
                         </Tooltip>
@@ -134,7 +133,7 @@ export default function ClassSearch() {
                 </div>
 
                 <div className="w-full max-w-full mt-4">
-                    <Accordion type="multiple" className="font-figtree">
+                    <Accordion type="multiple" defaultValue={["item-1", "item-2"]} className="font-figtree">
                         {/* Searched Section */}
                         <AccordionItem value="item-1">
                             <AccordionTrigger className="text-lg text-green-400 font-bold hover:no-underline hover:cursor-pointer">Searched</AccordionTrigger>
@@ -148,20 +147,6 @@ export default function ClassSearch() {
                                             uuid={c.uuid}
                                             classcode={c.code || ''}
                                             dept={c.dept || ''}
-                                            onSectionClick={(section, classData) => {
-                                                addClassToDraft({
-                                                    uuid: section.uuid,
-                                                    classID: section.classID,
-                                                    dept: classData.dept,
-                                                    code: classData.code,
-                                                    title: classData.title,
-                                                    days: section.days,
-                                                    starttime: section.starttime,
-                                                    endtime: section.endtime,
-                                                    component: section.component,
-                                                    instructor: section.instructor,
-                                                });
-                                            }}
                                         />
                                     ))
                                 )}
@@ -169,28 +154,64 @@ export default function ClassSearch() {
                         </AccordionItem>
 
                         {/* Currently Added Section */}
-                        <AccordionItem value="item-2">
+                        <AccordionItem value="item-2" >
                             <AccordionTrigger className="text-lg text-purple-400 font-bold hover:no-underline hover:cursor-pointer">Currently Selected</AccordionTrigger>
                             <AccordionContent className="font-inter max-h-[300px] overflow-y-auto">
                                 {draftSchedule.length === 0 ? (
                                     <div className="text-sm text-[#888888] font-figtree">No classes added</div>
                                 ) : (
-                                    draftSchedule.map((c: any, index: number) => (
-                                        <div key={index} className="relative group">
-                                            <Class
-                                                uuid={c.uuid || c.classID}
-                                                classcode={c.code || c.classcode || ''}
-                                                dept={c.dept || ''}
-                                            />
-                                            <button
-                                                onClick={() => removeClassFromDraft(index)}
-                                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                                                title="Remove class"
-                                            >
-                                                ×
-                                            </button>
-                                        </div>
-                                    ))
+                                    (() => {
+                                        // Group sections by class (dept + code)
+                                        const groupedClasses = draftSchedule.reduce((acc: any, section: any, index: number) => {
+                                            const key = `${section.dept}-${section.code}`;
+                                            if (!acc[key]) {
+                                                acc[key] = {
+                                                    dept: section.dept,
+                                                    code: section.code,
+                                                    title: section.title,
+                                                    sections: []
+                                                };
+                                            }
+                                            acc[key].sections.push({ ...section, originalIndex: index });
+                                            return acc;
+                                        }, {});
+
+                                        return Object.values(groupedClasses).map((classGroup: any) => (
+                                            <div key={`${classGroup.dept}-${classGroup.code}`} className="bg-[#181818] rounded-lg p-3 mb-2 border border-[#303030]">
+                                                <div className="font-bold text-white mb-2">
+                                                    {classGroup.dept} {classGroup.code}                                                </div>
+                                                <div className="text-sm text-[#A8A8A8] mb-2">
+                                                    {classGroup.title}
+                                                </div>
+                                                <div className="flex flex-col gap-2">
+                                                    {classGroup.sections.map((section: any) => (
+                                                        <div key={section.originalIndex} className="relative group bg-[#101010] rounded p-2 border border-[#404040]">
+                                                            <div className="flex flex-col gap-1">
+                                                                <div className="text-sm font-semibold text-purple-400">
+                                                                    {section.component} ({section.classID})
+                                                                </div>
+                                                                <div className="text-xs text-[#888888]">
+                                                                    {section.days} • {section.starttime} - {section.endtime}
+                                                                </div>
+                                                                {section.instructor && (
+                                                                    <div className="text-xs text-[#888888]">
+                                                                        {section.instructor}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <button
+                                                                onClick={() => removeClassFromDraft(section.originalIndex)}
+                                                                className="absolute top-1 right-1 cursor-pointer rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                                                title="Remove section"
+                                                            >
+                                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ));
+                                    })()
                                 )}
                             </AccordionContent>
                         </AccordionItem>

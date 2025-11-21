@@ -4,10 +4,29 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Loader  from "@/components/Loader";
 import { ClassProps, ClassSection, ClassData, ClassInfoResponse } from "@/types";
+import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
+import { timeToDecimal, calculateDuration } from "@/lib/timeUtils";
 export default function Class(props: ClassProps) {
-    // const { selectedClasses, setSelectedClasses } = useAuth();
+    const { addClassToDraft } = useScheduleBuilder();
     const [selectedClasses, setSelectedClasses] = useState<any>({});
     const [classInfo, setClassInfo] = useState<ClassInfoResponse>({data: []});
+    
+    const handleSectionClick = (section: ClassSection, classData: ClassData) => {
+        // Convert section to ClassSection format for calendar
+        const classToAdd: ClassSection = {
+            ...section,
+            dept: classData.dept,
+            code: classData.code,
+            title: classData.title,
+        };
+        
+        addClassToDraft(classToAdd);
+        
+        // Call parent handler if provided
+        if (props.onSectionClick) {
+            props.onSectionClick(section, classData);
+        }
+    };
     // const handleClick = (classcode, classname, dept, credithours, catalogyr, major) => {
     //     const isAlreadyPresent = selectedClasses.some((cls) => cls.classcode === classcode && cls.classname === classname);
     //     const selected = isAlreadyPresent;
@@ -66,7 +85,7 @@ export default function Class(props: ClassProps) {
                 <button
                     disabled={(section.seats_available ?? 0) <= 0}
                     key={section.uuid}
-                    onClick={() => props.onSectionClick?.(section, classInfo.data[0])}
+                    onClick={() => handleSectionClick(section, classInfo.data[0])}
                     className={
                         `w-full font-inter rounded-md mt-2 bg-[#181818] transition duration-100 px-3 py-2 text-left` +
                         ((section.seats_available ?? 0) > 0 ? " cursor-pointer hover:bg-[#232323]" : " cursor-default opacity-60")

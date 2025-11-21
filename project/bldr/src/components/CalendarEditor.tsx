@@ -44,7 +44,7 @@ const CalendarEditor = () => {
   return (
     <div
       ref={containerRef}
-      className="relative flex justify-center items-center m-5 bg-[#2c2c2c] flex-1 overflow-auto border-2 border-[#404040] rounded-[10px] text-white p-2"
+      className="relative flex justify-center items-center my-5 bg-[#2c2c2c] flex-1 overflow-auto border-2 border-[#404040] rounded-[10px] text-white p-2"
       style={{
         width: dimensions.width,
         height: dimensions.height,
@@ -136,9 +136,9 @@ const CalendarEditor = () => {
                                   }}
                                 >
                                   <div className="font-bold text-[8px] md:text-xs font-dmsans truncate">
-                                    {cls.dept} {cls.code}
+                                    {cls.dept} {cls.code} ({cls.component})
                                   </div>
-                                  <div className="text-[8px] md:text-xs font-figtree truncate">
+                                  <div className="text-[8px] md:text-xs font-figtree text-wrap">
                                     {cls.instructor || 'Staff'}
                                   </div>
                                 </div>
