@@ -44,7 +44,7 @@ const CalendarEditor = () => {
   return (
     <div
       ref={containerRef}
-      className="relative flex justify-center items-center m-5 bg-[#2c2c2c] flex-1 overflow-auto border-2 border-[#404040] rounded-[10px] text-white p-2"
+      className="relative flex justify-center items-center my-5 bg-[#2c2c2c] flex-1 overflow-auto border-2 border-[#404040] rounded-[10px] text-white p-2"
       style={{
         width: dimensions.width,
         height: dimensions.height,

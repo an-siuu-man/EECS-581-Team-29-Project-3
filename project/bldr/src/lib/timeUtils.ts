@@ -43,24 +43,40 @@ export function calculateDuration(startTime: string, endTime: string): number {
 export function mapDayAbbreviation(abbr: string): string {
   const dayMap: { [key: string]: string } = {
     'M': 'Monday',
-    'T': 'Tuesday',
+    'Tu': 'Tuesday',
     'W': 'Wednesday',
-    'R': 'Thursday',
+    'Th': 'Thursday',
     'F': 'Friday',
-    'S': 'Saturday',
+    'Sa': 'Saturday',
     'U': 'Sunday',
   };
-  return dayMap[abbr.toUpperCase()] || abbr;
+  return dayMap[abbr] || abbr;
 }
 
 /**
- * Parse days string (e.g., "MWF" or "TR") into array of full day names
+ * Parse days string (e.g., "MWF" or "TuTh") into array of full day names
  */
 export function parseDays(daysStr: string): string[] {
   if (!daysStr) return [];
   
-  return daysStr
-    .split('')
-    .map(d => mapDayAbbreviation(d))
-    .filter(Boolean);
+  const days: string[] = [];
+  let i = 0;
+  
+  while (i < daysStr.length) {
+    // Check for two-letter abbreviations first (Tu, Th, Sa)
+    if (i + 1 < daysStr.length) {
+      const twoChar = daysStr.substring(i, i + 2);
+      if (twoChar === 'Tu' || twoChar === 'Th' || twoChar === 'Sa') {
+        days.push(mapDayAbbreviation(twoChar));
+        i += 2;
+        continue;
+      }
+    }
+    
+    // Single-letter abbreviation (M, W, F, U)
+    days.push(mapDayAbbreviation(daysStr[i]));
+    i++;
+  }
+  
+  return days.filter(Boolean);
 }
