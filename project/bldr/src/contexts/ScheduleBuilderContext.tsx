@@ -57,6 +57,10 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
         const timeOverlap = newStart < existingEnd && newEnd > existingStart;
         
         if (timeOverlap) {
+          console.log(`Checking conflict between ${newClass.dept} ${newClass.code} ${newClass.classID} and ${existing.dept} ${existing.code} ${existing.classID}`);
+          console.log(`Conflict detected I am existing.!!!!!!!!!!!`);
+          // console.log(`newItem: ${newClass.dept} ${newClass.code} ${newClass.classID}`);
+          // console.log(`existingItem: ${existing.dept} ${existing.code} ${existing.classID}`);
           return {
             conflict: true,
             conflictingClass: existing
@@ -75,8 +79,13 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
       if (exists) {
         return prev; // Don't add duplicate UUID
       }
-      
-      // Check for time conflicts
+            // Check if a section of the same class (classID) and same component type already exists
+      const sameComponentExists = prev.some((item: any) => 
+        item.dept === classItem.dept &&
+        item.code === classItem.code &&
+        item.component === classItem.component
+      );
+
       const conflictCheck = checkTimeConflict(classItem, prev);
       if (conflictCheck.conflict) {
         // Show toast notification for conflict
@@ -92,13 +101,6 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
         return prev;
       }
       
-      // Check if a section of the same class (classID) and same component type already exists
-      const sameComponentExists = prev.some((item: any) => 
-        item.dept === classItem.dept &&
-        item.code === classItem.code &&
-        item.component === classItem.component
-      );
-      
       if (sameComponentExists) {
         // Check if replacement would cause conflicts with other classes
         const otherClasses = prev.filter((item: any) => 
@@ -106,20 +108,22 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
             item.code === classItem.code &&
             item.component === classItem.component)
         );
+
         
-        const replacementConflict = checkTimeConflict(classItem, otherClasses);
-        if (replacementConflict.conflict) {
-          const conflicting = replacementConflict.conflictingClass;
-          toast.error(
-            `Time conflict with ${conflicting.dept} ${conflicting.code} (${conflicting.component})`,
-            {
-              style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
-              duration: 3000,
-              icon: <AlertTriangle className="h-5 w-5" />,
-            }
-          );
-          return prev;
-        }
+        // const replacementConflict = checkTimeConflict(classItem, otherClasses);
+        // if (replacementConflict.conflict) {
+        //   const conflicting = replacementConflict.conflictingClass;
+        //   console.log(`Conflict detected when replacing with ${classItem.dept} ${classItem.code} ${classItem.classID}`);
+        //   toast.error(
+        //     `Time conflict with ${conflicting.dept} ${conflicting.code} (${conflicting.component})`,
+        //     {
+        //       style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+        //       duration: 3000,
+        //       icon: <AlertTriangle className="h-5 w-5 text-yellow-300" />,
+        //     }
+        //   );
+        //   return prev;
+        // }
         
         // Replace the existing section of this component type
         return prev.map((item: any) => 
@@ -131,6 +135,9 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
         );
       }
       
+      prev.data.map((item: any) =>
+        console.log(`Existing item in draft: ${item.dept} ${item.code} ${item.classID}`)
+      );
       // Add new class section
       return [...prev, classItem];
     });

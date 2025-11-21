@@ -14,12 +14,10 @@ import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
 
 export default function ClassSearch() {
     // Get schedule builder context
-    const { draftSchedule, addClassToDraft, removeClassFromDraft } = useScheduleBuilder();
+    const { draftSchedule, removeClassFromDraft } = useScheduleBuilder();
     
     // Fallback local state (was previously coming from a context like useAuth)
-    const [userId, setUserId] = useState<string | null>(null);
     const [selectedClasses, setSelectedClasses] = useState<SearchedClass[]>([]);
-    const [activeSchedule, setActiveSchedule] = useState<any>(null);
 
     const [classes, setClasses] = useState<SearchedClass[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -149,20 +147,6 @@ export default function ClassSearch() {
                                             uuid={c.uuid}
                                             classcode={c.code || ''}
                                             dept={c.dept || ''}
-                                            onSectionClick={(section, classData) => {
-                                                addClassToDraft({
-                                                    uuid: section.uuid,
-                                                    classID: section.classID,
-                                                    dept: classData.dept,
-                                                    code: classData.code,
-                                                    title: classData.title,
-                                                    days: section.days,
-                                                    starttime: section.starttime,
-                                                    endtime: section.endtime,
-                                                    component: section.component,
-                                                    instructor: section.instructor,
-                                                });
-                                            }}
                                         />
                                     ))
                                 )}
@@ -195,8 +179,7 @@ export default function ClassSearch() {
                                         return Object.values(groupedClasses).map((classGroup: any) => (
                                             <div key={`${classGroup.dept}-${classGroup.code}`} className="bg-[#181818] rounded-lg p-3 mb-2 border border-[#303030]">
                                                 <div className="font-bold text-white mb-2">
-                                                    {classGroup.dept} {classGroup.code}
-                                                </div>
+                                                    {classGroup.dept} {classGroup.code}                                                </div>
                                                 <div className="text-sm text-[#A8A8A8] mb-2">
                                                     {classGroup.title}
                                                 </div>
@@ -205,7 +188,7 @@ export default function ClassSearch() {
                                                         <div key={section.originalIndex} className="relative group bg-[#101010] rounded p-2 border border-[#404040]">
                                                             <div className="flex flex-col gap-1">
                                                                 <div className="text-sm font-semibold text-purple-400">
-                                                                    {section.component}
+                                                                    {section.component} ({section.classID})
                                                                 </div>
                                                                 <div className="text-xs text-[#888888]">
                                                                     {section.days} • {section.starttime} - {section.endtime}

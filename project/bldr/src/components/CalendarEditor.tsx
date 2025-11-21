@@ -136,9 +136,9 @@ const CalendarEditor = () => {
                                   }}
                                 >
                                   <div className="font-bold text-[8px] md:text-xs font-dmsans truncate">
-                                    {cls.dept} {cls.code}
+                                    {cls.dept} {cls.code} ({cls.component})
                                   </div>
-                                  <div className="text-[8px] md:text-xs font-figtree truncate">
+                                  <div className="text-[8px] md:text-xs font-figtree text-wrap">
                                     {cls.instructor || 'Staff'}
                                   </div>
                                 </div>
