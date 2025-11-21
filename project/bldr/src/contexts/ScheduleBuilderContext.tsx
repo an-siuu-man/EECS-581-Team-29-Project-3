@@ -135,9 +135,11 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
         );
       }
       
-      prev.data.map((item: any) =>
-        console.log(`Existing item in draft: ${item.dept} ${item.code} ${item.classID}`)
-      );
+      if (prev?.data) {
+        prev.data.map((item: any) =>
+          console.log(`Existing item in draft: ${item.dept} ${item.code} ${item.classID}`)
+        );
+      }
       // Add new class section
       return [...prev, classItem];
     });

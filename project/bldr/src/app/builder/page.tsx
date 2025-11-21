@@ -13,7 +13,7 @@ import CalendarEditor from '@/components/CalendarEditor';
 
 export default function Builder() {
   const { user, loading, signOut } = useAuth();
-  const { clearDraft } = useScheduleBuilder();
+  const { clearDraft, draftSchedule } = useScheduleBuilder();
   const router = useRouter();
 
   useEffect(() => {
@@ -133,6 +133,11 @@ export default function Builder() {
 
           {/* Main Grid Layout */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* Class Search Section */}
+            <div className="flex justify-center items-start">
+              <ClassSearch />
+            </div>
+
             {/* Calendar Section */}
             <div className="flex flex-col items-end">
               <CalendarEditor />
@@ -140,15 +145,11 @@ export default function Builder() {
                 onClick={handleClearSchedule}
                 variant="destructive"
                 className="font-dmsans cursor-pointer w- max-w-[600px]"
+                disabled={draftSchedule.length === 0}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Clear Schedule
               </Button>
-            </div>
-
-            {/* Class Search Section */}
-            <div className="flex justify-center items-start">
-              <ClassSearch />
             </div>
           </div>
         </div>

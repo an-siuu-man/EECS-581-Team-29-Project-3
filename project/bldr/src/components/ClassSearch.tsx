@@ -136,7 +136,34 @@ export default function ClassSearch() {
                     <Accordion type="multiple" defaultValue={["item-1", "item-2"]} className="font-figtree">
                         {/* Searched Section */}
                         <AccordionItem value="item-1">
-                            <AccordionTrigger className="text-lg text-green-400 font-bold hover:no-underline hover:cursor-pointer">Searched</AccordionTrigger>
+                            <AccordionTrigger className="text-lg text-green-400 font-bold hover:no-underline hover:cursor-pointer">
+                                <div className="flex items-center justify-between w-full pr-2">
+                                    <span>Searched</span>
+                                    {selectedClasses.length > 0 && (
+                                        <TooltipProvider>
+                                            <Tooltip delayDuration={300}>
+                                                <TooltipTrigger asChild>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedClasses([]);
+                                                        }}
+                                                        className="ml-2 p-1 rounded cursor-pointer"
+                                                    >
+                                                        <Trash2 className="h-4 w-4 text-red-500 " />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent 
+                                                    className="font-figtree" 
+                                                    side='bottom'
+                                                >
+                                                    <p>Clear all searches</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    )}
+                                </div>
+                            </AccordionTrigger>
                             <AccordionContent className="font-inter max-h-[300px] overflow-y-auto">
                                 {selectedClasses.length === 0 ? (
                                     <div className="text-sm text-[#888888] font-figtree">No classes searched</div>
@@ -179,7 +206,8 @@ export default function ClassSearch() {
                                         return Object.values(groupedClasses).map((classGroup: any) => (
                                             <div key={`${classGroup.dept}-${classGroup.code}`} className="bg-[#181818] rounded-lg p-3 mb-2 border border-[#303030]">
                                                 <div className="font-bold text-white mb-2">
-                                                    {classGroup.dept} {classGroup.code}                                                </div>
+                                                    {classGroup.dept} {classGroup.code}                                                
+                                                </div>
                                                 <div className="text-sm text-[#A8A8A8] mb-2">
                                                     {classGroup.title}
                                                 </div>

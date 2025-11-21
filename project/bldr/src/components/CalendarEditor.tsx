@@ -13,21 +13,26 @@ const CalendarEditor = () => {
   const [dimensions, setDimensions] = useState({ width: 600, height: 400 });
   const containerRef = useRef<HTMLDivElement>(null);
   const isResizing = useRef(false);
+  const startPos = useRef({ x: 0, y: 0 });
+  const startDimensions = useRef({ width: 0, height: 0 });
 
   // Mouse event handlers for resizing
   const startResize = (e: React.MouseEvent) => {
     isResizing.current = true;
+    startPos.current = { x: e.clientX, y: e.clientY };
+    startDimensions.current = { ...dimensions };
     document.body.style.cursor = "nwse-resize";
     document.addEventListener("mousemove", handleResize);
     document.addEventListener("mouseup", stopResize);
   };
 
   const handleResize = (e: MouseEvent) => {
-    if (!isResizing.current || !containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
+    if (!isResizing.current) return;
+    const deltaX = e.clientX - startPos.current.x;
+    const deltaY = e.clientY - startPos.current.y;
     setDimensions({
-      width: Math.max(300, Math.min(900, e.clientX - rect.left)),   // min 300, max 900
-      height: Math.max(200, Math.min(700, e.clientY - rect.top)),   // min 200, max 700
+      width: Math.max(300, Math.min(900, startDimensions.current.width + deltaX)),
+      height: Math.max(200, Math.min(700, startDimensions.current.height + deltaY)),
     });
   };
 
@@ -48,8 +53,8 @@ const CalendarEditor = () => {
       style={{
         width: dimensions.width,
         height: dimensions.height,
-        maxWidth: 900,
-        maxHeight: 700,
+        maxWidth: 700,
+        maxHeight: 900,
         minWidth: 300,
         minHeight: 200,
       }}
