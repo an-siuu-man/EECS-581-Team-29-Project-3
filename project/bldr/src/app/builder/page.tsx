@@ -107,7 +107,7 @@ export default function Builder() {
       <div className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex justify-between items-center">
             <div>
               <h1 className="text-4xl font-figtree font-semibold mb-2">
                 <span className="font-dmsans font-bold">
@@ -132,7 +132,7 @@ export default function Builder() {
           </div>
 
           {/* Main Grid Layout */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="grid grid-cols-[3fr_7fr] gap-6">
             {/* Class Search Section */}
             <div className="flex justify-center items-start">
               <ClassSearch />

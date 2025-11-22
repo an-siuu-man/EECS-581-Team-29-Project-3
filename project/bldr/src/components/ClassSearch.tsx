@@ -155,12 +155,20 @@ export default function ClassSearch() {
                                     <div className="text-sm text-[#888888] font-figtree">No classes searched</div>
                                 ) : (
                                     selectedClasses.map(c => (
-                                        <Class
-                                            key={c.uuid}
-                                            uuid={c.uuid}
-                                            classcode={c.code || ''}
-                                            dept={c.dept || ''}
-                                        />
+                                        <div key={c.uuid} className="relative group">
+                                            <Class
+                                                uuid={c.uuid}
+                                                classcode={c.code || ''}
+                                                dept={c.dept || ''}
+                                            />
+                                            <button
+                                                onClick={() => setSelectedClasses(prev => prev.filter(cls => cls.uuid !== c.uuid))}
+                                                className="absolute top-3 right-3 cursor-pointer rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[#080808]/80 hover:bg-[#181818]"
+                                                title="Remove from searched"
+                                            >
+                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                            </button>
+                                        </div>
                                     ))
                                 )}
                             </AccordionContent>
@@ -169,7 +177,7 @@ export default function ClassSearch() {
                         {/* Currently Added Section */}
                         <AccordionItem value="item-2" >
                             <AccordionTrigger className="text-lg text-purple-400 font-bold hover:no-underline hover:cursor-pointer">Currently Selected</AccordionTrigger>
-                            <AccordionContent className="font-inter max-h-[300px] overflow-y-auto">
+                            <AccordionContent className="font-inter max-h-[300px] overflow-y-scroll scrollbar-hidden">
                                 {draftSchedule.length === 0 ? (
                                     <div className="text-sm text-[#888888] font-figtree">No classes added</div>
                                 ) : (
@@ -191,11 +199,8 @@ export default function ClassSearch() {
 
                                         return Object.values(groupedClasses).map((classGroup: any) => (
                                             <div key={`${classGroup.dept}-${classGroup.code}`} className="bg-[#181818] rounded-lg p-3 mb-2 border border-[#303030]">
-                                                <div className="font-bold text-white mb-2">
-                                                    {classGroup.dept} {classGroup.code}                                                
-                                                </div>
-                                                <div className="text-sm text-[#A8A8A8] mb-2">
-                                                    {classGroup.title}
+                                                <div className="font-bold text-white mb-4">
+                                                    {classGroup.dept} {classGroup.code}: {classGroup.title}                                              
                                                 </div>
                                                 <div className="flex flex-col gap-2">
                                                     {classGroup.sections.map((section: any) => (

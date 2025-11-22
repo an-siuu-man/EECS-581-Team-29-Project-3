@@ -98,7 +98,9 @@ export default function Class(props: ClassProps) {
                                 <span className="text-xs text-[#a8a8a8] self-center">{section.component}</span>
                             </div>
                             <div className="flex flex-col justify-start items-start font-inter">
-                                <span className="text-sm text-[#fafafa]">{section.days} {section.starttime} - {section.endtime}</span>
+                                <span className="text-sm text-[#fafafa]">
+                                    {section.days} {section.starttime && section.endtime ? `${section.starttime} - ${section.endtime}` : (section.starttime || section.endtime || '')}
+                                </span>
                                 {section.instructor && (
                                     <span className="text-xs text-[#a8a8a8]">{section.instructor}</span>
                                 )}
