@@ -160,7 +160,7 @@ export function Sidebar() {
                   <AccordionContent className="font-inter">
                     {/* New schedule input */}
                     <Label htmlFor="schedule-name" className="text-sm font-dmsans mb-1 text-[#888888]">Make new schedule</Label>
-                    <div className="flex flex-row items-center justify-between pl-2 gap-2 mb-4">
+                    <div className="flex flex-row items-center justify-between gap-2 mb-4">
                       <Input
                         type="text"
                         id="schedule-name"

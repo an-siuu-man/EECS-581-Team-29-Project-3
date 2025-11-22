@@ -93,15 +93,18 @@ export default function Class(props: ClassProps) {
                     >
                     <div className="flex flex-row w-full justify-between gap-4 items-start mb-1">
                         <div className="flex flex-row gap-4 items-start">
-                            <span className="font-semibold">#{section.classID}</span>
+                            <div className="flex flex-col">
+                                <span className="font-semibold">#{section.classID}</span>
+                                <span className="text-xs text-[#a8a8a8] self-center">{section.component}</span>
+                            </div>
                             <div className="flex flex-col justify-start items-start font-inter">
-                                <span className="text-sm text-[#fafafa]">{section.days} {section.starttime} - {section.endtime} {section.component}</span>
+                                <span className="text-sm text-[#fafafa]">{section.days} {section.starttime} - {section.endtime}</span>
                                 {section.instructor && (
                                     <span className="text-xs text-[#a8a8a8]">{section.instructor}</span>
                                 )}
                             </div>
                         </div>
-                        <span className="text-sm font-semibold justify-self-end text-[#b0b0b0]">{section.seats_available}</span>
+                        <span className={`text-sm font-semibold justify-self-end ${(section.seats_available ?? 0) === 0 ? 'text-gray-500' : (section.seats_available ?? 0) <= 3 ? 'text-red-400' : (section.seats_available ?? 0) < 10 ? 'text-yellow-400' : 'text-green-400'}`}>{section.seats_available}</span>
                     </div>
                     
                 </button>
