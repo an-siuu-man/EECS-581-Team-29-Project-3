@@ -22,6 +22,8 @@ export default function ClassSearch() {
     const [classes, setClasses] = useState<SearchedClass[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [highlightedIndex, setHighlightedIndex] = useState(0);
+    
     useEffect(() => {
         const delay = setTimeout(() => {
         if (!searchQuery.trim()) {
@@ -34,7 +36,10 @@ export default function ClassSearch() {
             body: JSON.stringify({ query: searchQuery }),
         })
             .then(r => r.json())
-            .then(d => setClasses(d || []))
+            .then(d => {
+                setClasses(d || []);
+                setHighlightedIndex(0); // Reset highlight when new results come in
+            })
             .catch(() => setClasses([]));
         }, 400);
         return () => clearTimeout(delay);
@@ -87,6 +92,25 @@ export default function ClassSearch() {
                         <Input
                             onChange = {(e) => {setSearchQuery(e.target.value);  setDropdownOpen(true);}}
                             onFocus={() => setDropdownOpen(true)}
+                            onKeyDown={(e) => {
+                                if (!dropdownOpen || classes.length === 0) return;
+                                
+                                if (e.key === 'ArrowDown') {
+                                    e.preventDefault();
+                                    setHighlightedIndex(prev => 
+                                        prev < classes.length - 1 ? prev + 1 : prev
+                                    );
+                                } else if (e.key === 'ArrowUp') {
+                                    e.preventDefault();
+                                    setHighlightedIndex(prev => prev > 0 ? prev - 1 : 0);
+                                } else if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (classes[highlightedIndex]) {
+                                        handleDropdownSelect(classes[highlightedIndex].uuid);
+                                        setDropdownOpen(false);
+                                    }
+                                }
+                            }}
                             placeholder="Class name"
                             className="font-inter border-[#404040] border placeholder:text-xs selection:bg-blue-400 text-xs" />
                         <TooltipProvider>
@@ -113,13 +137,16 @@ export default function ClassSearch() {
                                 exit={{ opacity: 0, y: -20 }}
                                 tabIndex={-1}
                             >
-                                {classes.map(c => (
+                                {classes.map((c, index) => (
                                     <motion.li
                                         key={c.uuid}
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         onMouseDown={async (e) => {e.preventDefault(); await handleDropdownSelect(c.uuid); setDropdownOpen(false);}}
-                                        className="p-2 text-sm text-[#fafafa] hover:bg-[#181818] hover:cursor-pointer scroll-p-4 font-inter last:border-b-0"
+                                        onMouseEnter={() => setHighlightedIndex(index)}
+                                        className={`p-2 text-sm text-[#fafafa] hover:cursor-pointer scroll-p-4 font-inter last:border-b-0 ${
+                                            index === highlightedIndex ? 'bg-[#181818]' : 'hover:bg-[#181818]'
+                                        }`}
                                     >
                                         <strong>{c.dept} {c.code}</strong> - {c.title}
                                     </motion.li>
@@ -138,15 +165,16 @@ export default function ClassSearch() {
                                 <div className="flex items-center justify-between gap-2 w-full">
                                     <span>Searched</span>
                                     {selectedClasses.length > 0 && (
-                                        <button
+                                        <span
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setSelectedClasses([]);
+                                                setSearchQuery('');
                                             }}
                                             className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 cursor-pointer transition-colors font-inter font-normal"
                                         >
                                             Clear all searched
-                                        </button>
+                                        </span>
                                     )}
                                 </div>
                             </AccordionTrigger>
@@ -166,7 +194,7 @@ export default function ClassSearch() {
                                                 className="absolute top-3 right-3 cursor-pointer rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[#080808]/80 hover:bg-[#181818]"
                                                 title="Remove from searched"
                                             >
-                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                                { <Trash2 className="h-4 w-4 text-red-500" /> }
                                             </button>
                                         </div>
                                     ))

@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { timeToDecimal } from "@/lib/timeUtils";
 import { parseDays } from "@/lib/timeUtils";
 import { toast } from "sonner";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle,AlertCircle } from "lucide-react";
 
 const ScheduleBuilderContext = createContext<any>(undefined);
 
@@ -45,6 +45,13 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
     const newEnd = timeToDecimal(newClass.endtime);
 
     for (const existing of existingClasses) {
+      // Skip conflict check if it's the same class (dept, code, component) - we'll replace it anyway
+      if (existing.dept === newClass.dept && 
+          existing.code === newClass.code && 
+          existing.component === newClass.component) {
+        continue;
+      }
+
       const existingDays = parseDays(existing.days);
       const existingStart = timeToDecimal(existing.starttime);
       const existingEnd = timeToDecimal(existing.endtime);
@@ -86,6 +93,24 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
         item.component === classItem.component
       );
 
+      const alreadyExists = prev.some((item: any) => 
+        item.classID === classItem.classID
+      );
+      if (alreadyExists) {
+        // Show toast notification for duplicate
+        toast.error(
+          `Section #${classItem.classID} of ${classItem.dept} ${classItem.code} (${classItem.component}) is already in the schedule`,
+          {
+            style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+            duration: 3000,
+            icon: <AlertCircle className="h-5 w-5" />,
+          }
+        );
+        return prev; // Don't add duplicate classID
+      }
+
+      
+
       const conflictCheck = checkTimeConflict(classItem, prev);
       if (conflictCheck.conflict) {
         // Show toast notification for conflict
@@ -101,6 +126,7 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
         return prev;
       }
       
+
       if (sameComponentExists) {
         // Check if replacement would cause conflicts with other classes
         const otherClasses = prev.filter((item: any) => 
@@ -134,6 +160,7 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
             : item
         );
       }
+      
       
       if (prev?.data) {
         prev.data.map((item: any) =>
