@@ -4,7 +4,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
 import { ClassSection } from "@/types";
 import { timeToDecimal, calculateDuration, parseDays } from "@/lib/timeUtils";
-import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 
 const CalendarEditor = () => {
   const { draftSchedule, draftScheduleName } = useScheduleBuilder();
@@ -15,7 +20,7 @@ const CalendarEditor = () => {
   return (
     <div
       className="relative flex justify-center items-center my-5 bg-[#2c2c2c] border-2 border-[#404040] rounded-[10px] text-white px-2 w-full"
-      style={{ height: '600px' }}
+      style={{ height: "600px" }}
     >
       <div className="w-full h-full overflow-hidden">
         <AnimatePresence>
@@ -60,8 +65,10 @@ const CalendarEditor = () => {
 
                           {draftSchedule
                             .filter((cls: ClassSection) => {
-                              const classDays = parseDays(cls.days || '');
-                              const startTime = timeToDecimal(cls.starttime || '');
+                              const classDays = parseDays(cls.days || "");
+                              const startTime = timeToDecimal(
+                                cls.starttime || ""
+                              );
                               return (
                                 classDays.includes(day) &&
                                 startTime >= hour &&
@@ -70,44 +77,57 @@ const CalendarEditor = () => {
                             })
                             .map((cls: ClassSection, idx: number) => {
                               const baseRowHeight = 38;
-                              const startTime = timeToDecimal(cls.starttime || '');
-                              const duration = calculateDuration(cls.starttime || '', cls.endtime || '');
+                              const startTime = timeToDecimal(
+                                cls.starttime || ""
+                              );
+                              const duration = calculateDuration(
+                                cls.starttime || "",
+                                cls.endtime || ""
+                              );
                               const offset = (startTime - hour) * baseRowHeight;
                               const height = duration * baseRowHeight;
 
                               // Generate a color based on dept
                               const colors = [
-                                'bg-yellow-300',
-                                'bg-blue-300',
-                                'bg-green-300',
-                                'bg-pink-300',
-                                'bg-purple-300',
-                                'bg-red-300',
+                                "bg-yellow-300",
+                                "bg-blue-300",
+                                "bg-green-300",
+                                "bg-pink-300",
+                                "bg-purple-300",
+                                "bg-red-300",
                               ];
-                              const colorIndex = (cls.dept?.charCodeAt(0) || 0) % colors.length;
+                              const colorIndex =
+                                (cls.dept?.charCodeAt(0) || 0) % colors.length;
 
                               return (
                                 <TooltipProvider key={idx}>
                                   <Tooltip delayDuration={200}>
                                     <TooltipTrigger asChild>
                                       <div
-                                        className={`${
-                                          colors[colorIndex]
-                                        } absolute flex flex-col items-start justify-center left-0.5 right-0.5 p-1 rounded-md text-[#1a1a1a] shadow-md z-10 overflow-hidden cursor-pointer`}
+                                        className={`${colors[colorIndex]} absolute flex flex-col items-start justify-center left-0.5 right-0.5 p-1 rounded-md text-[#1a1a1a] shadow-md z-10 overflow-hidden cursor-pointer`}
                                         style={{
                                           top: `${offset}px`,
                                           height: `${height}px`,
                                         }}
                                       >
                                         <div className="font-bold text-xs font-dmsans truncate w-full">
-                                          {cls.dept} {cls.code} ({cls.component})
+                                          {cls.dept} {cls.code} ({cls.component}
+                                          )
                                         </div>
                                       </div>
                                     </TooltipTrigger>
-                                    <TooltipContent className="font-figtree" side="top">
-                                     <p>{cls.dept} {cls.code} ({cls.component})</p>
-                                      <p>{cls.instructor || 'Staff'}</p>
-                                      <div className="flex"><p className="mr-4">#{cls.classID }</p><p>{cls.days}</p></div>
+                                    <TooltipContent
+                                      className="font-figtree"
+                                      side="top"
+                                    >
+                                      <p>
+                                        {cls.dept} {cls.code} ({cls.component})
+                                      </p>
+                                      <p>{cls.instructor || "Staff"}</p>
+                                      <div className="flex">
+                                        <p className="mr-4">#{cls.classID}</p>
+                                        <p>{cls.days}</p>
+                                      </div>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -122,7 +142,8 @@ const CalendarEditor = () => {
             </motion.div>
           ) : (
             <div className="font-inter m-2 text-center text-xs md:text-sm">
-              Create a new schedule or choose one of your previous ones to see it here!
+              Create a new schedule or choose one of your previous ones to see
+              it here!
             </div>
           )}
         </AnimatePresence>

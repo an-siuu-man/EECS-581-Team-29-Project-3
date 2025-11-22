@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useScheduleBuilder } from '@/contexts/ScheduleBuilderContext';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { useEffect } from 'react';
-import { toast } from 'sonner';
-import { LogOut, AlertCircle, Trash2, X, Check } from 'lucide-react';
-import ClassSearch from '@/components/ClassSearch';
-import { Sidebar } from '@/components/Sidebar';
-import CalendarEditor from '@/components/CalendarEditor';
+import { useAuth } from "@/contexts/AuthContext";
+import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { LogOut, AlertCircle, Trash2, X, Check } from "lucide-react";
+import ClassSearch from "@/components/ClassSearch";
+import { Sidebar } from "@/components/Sidebar";
+import CalendarEditor from "@/components/CalendarEditor";
 
 export default function Builder() {
   const { user, loading, signOut } = useAuth();
@@ -18,24 +18,32 @@ export default function Builder() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/');
+      router.push("/");
     }
   }, [user, loading, router]);
 
   const handleLogout = async () => {
     try {
       await signOut();
-      toast.success('Logged out successfully', {
-        style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+      toast.success("Logged out successfully", {
+        style: {
+          fontFamily: "Inter",
+          backgroundColor: "#404040",
+          color: "#fff",
+        },
         duration: 2000,
         icon: <LogOut className="h-5 w-5" />,
       });
-      router.push('/');
+      router.push("/");
       router.refresh();
     } catch (error) {
-      console.error('Logout error:', error);
-      toast.error('Failed to logout', {
-        style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+      console.error("Logout error:", error);
+      toast.error("Failed to logout", {
+        style: {
+          fontFamily: "Inter",
+          backgroundColor: "#404040",
+          color: "#fff",
+        },
         duration: 3000,
         icon: <AlertCircle className="h-5 w-5" />,
       });
@@ -45,7 +53,9 @@ export default function Builder() {
   const handleClearSchedule = () => {
     toast(
       <div className="flex flex-col gap-2">
-        <p className="font-inter text-white">Clear all classes from schedule?</p>
+        <p className="font-inter text-white">
+          Clear all classes from schedule?
+        </p>
         <div className="flex gap-2">
           <Button
             size="sm"
@@ -53,8 +63,12 @@ export default function Builder() {
             onClick={() => {
               clearDraft();
               toast.dismiss();
-              toast.success('Schedule cleared', {
-                style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+              toast.success("Schedule cleared", {
+                style: {
+                  fontFamily: "Inter",
+                  backgroundColor: "#404040",
+                  color: "#fff",
+                },
                 duration: 2000,
                 icon: <Trash2 className="h-5 w-5" />,
               });
@@ -76,7 +90,11 @@ export default function Builder() {
         </div>
       </div>,
       {
-        style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+        style: {
+          fontFamily: "Inter",
+          backgroundColor: "#404040",
+          color: "#fff",
+        },
         duration: Infinity, // Don't auto-dismiss
         icon: <AlertCircle className="h-5 w-5 text-yellow-500" />,
       }
@@ -115,14 +133,14 @@ export default function Builder() {
                   <span className="text-red-500">l</span>
                   <span className="text-blue-600">d</span>
                   <span className="text-yellow-300">r</span>
-                </span>
-                {' '}Schedule Builder
+                </span>{" "}
+                Schedule Builder
               </h1>
               <p className="text-[#A8A8A8] font-inter">
                 Welcome back, {user.email}!
               </p>
             </div>
-            <Button 
+            <Button
               onClick={handleLogout}
               variant="secondary"
               className="font-dmsans cursor-pointer"
@@ -141,15 +159,20 @@ export default function Builder() {
             {/* Calendar Section */}
             <div className="flex flex-col items-end">
               <CalendarEditor />
-              <Button 
-                onClick={handleClearSchedule}
-                variant="destructive"
-                className="font-dmsans cursor-pointer w- max-w-[600px]"
-                disabled={draftSchedule.length === 0}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clear Schedule
-              </Button>
+              <div className="flex gap-4 mt-4">
+                <Button className="font-dmsans cursor-pointer w- max-w-[600px]">
+                  Save Schedule
+                </Button>
+                <Button
+                  onClick={handleClearSchedule}
+                  variant="destructive"
+                  className="font-dmsans cursor-pointer w- max-w-[600px]"
+                  disabled={draftSchedule.length === 0}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear Schedule
+                </Button>
+              </div>
             </div>
           </div>
         </div>
