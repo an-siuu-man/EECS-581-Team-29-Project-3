@@ -107,7 +107,7 @@ const CalendarEditor = () => {
                                     <TooltipContent className="font-figtree" side="top">
                                      <p>{cls.dept} {cls.code} ({cls.component})</p>
                                       <p>{cls.instructor || 'Staff'}</p>
-                                      <p className="flex"><p className="mr-4">#{cls.classID }</p><p>{cls.days}</p></p>
+                                      <div className="flex"><p className="mr-4">#{cls.classID }</p><p>{cls.days}</p></div>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
