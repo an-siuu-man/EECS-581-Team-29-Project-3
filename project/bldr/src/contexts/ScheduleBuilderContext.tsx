@@ -135,21 +135,22 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
             item.component === classItem.component)
         );
 
-        
-        // const replacementConflict = checkTimeConflict(classItem, otherClasses);
-        // if (replacementConflict.conflict) {
-        //   const conflicting = replacementConflict.conflictingClass;
-        //   console.log(`Conflict detected when replacing with ${classItem.dept} ${classItem.code} ${classItem.classID}`);
-        //   toast.error(
-        //     `Time conflict with ${conflicting.dept} ${conflicting.code} (${conflicting.component})`,
-        //     {
-        //       style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
-        //       duration: 3000,
-        //       icon: <AlertTriangle className="h-5 w-5 text-yellow-300" />,
-        //     }
-        //   );
-        //   return prev;
-        // }
+        // Find the old class being replaced for the toast notification
+        const oldClass = prev.find((item: any) => 
+          item.dept === classItem.dept &&
+          item.code === classItem.code &&
+          item.component === classItem.component
+        );
+
+        // Show toast notification for replacement
+        toast.success(
+          `Replaced ${oldClass.component} #${oldClass.classID} with #${classItem.classID}`,
+          {
+            style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+            duration: 3000,
+            icon: <AlertCircle className="h-5 w-5 text-blue-500" />,
+          }
+        );
         
         // Replace the existing section of this component type
         return prev.map((item: any) => 
