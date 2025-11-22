@@ -6,7 +6,7 @@ import { Input } from "./ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { SearchedClass } from "@/types";
-import { Trash2 } from "lucide-react";
+import { Trash2, Search } from "lucide-react";
 // import { useAuth } from "@/context/AuthContext";
 import Class from "./Class";
 import NewClass from "@/components/NewClass";
@@ -22,6 +22,8 @@ export default function ClassSearch() {
     const [classes, setClasses] = useState<SearchedClass[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [highlightedIndex, setHighlightedIndex] = useState(0);
+    
     useEffect(() => {
         const delay = setTimeout(() => {
         if (!searchQuery.trim()) {
@@ -34,7 +36,10 @@ export default function ClassSearch() {
             body: JSON.stringify({ query: searchQuery }),
         })
             .then(r => r.json())
-            .then(d => setClasses(d || []))
+            .then(d => {
+                setClasses(d || []);
+                setHighlightedIndex(0); // Reset highlight when new results come in
+            })
             .catch(() => setClasses([]));
         }, 400);
         return () => clearTimeout(delay);
@@ -69,7 +74,7 @@ export default function ClassSearch() {
     }
 
     return (
-        <div className="flex flex-col justify-start items-center my-5 min-w-[420px] max-w-[500px] max-h-[600px] overflow-y-scroll bg-[#080808] transition-all duration-150 border-2 border-[#303030] rounded-[10px]">
+        <div className="flex flex-col justify-start items-center my-5 min-w-[420px] max-w-[500px] max-h-[600px] overflow-y-scroll scrollbar-hidden bg-[#080808] transition-all duration-150 border-2 border-[#303030] rounded-[10px]">
             <div className="flex flex-col justify-start items-center w-full h-full p-5">
                 <h1 className="text-xl self-start font-figtree font-bold text-[#fafafa]">Search for classes</h1>
                 <div className="flex-col justify-start items-center w-full">
@@ -87,21 +92,38 @@ export default function ClassSearch() {
                         <Input
                             onChange = {(e) => {setSearchQuery(e.target.value);  setDropdownOpen(true);}}
                             onFocus={() => setDropdownOpen(true)}
+                            onKeyDown={(e) => {
+                                if (!dropdownOpen || classes.length === 0) return;
+                                
+                                if (e.key === 'ArrowDown') {
+                                    e.preventDefault();
+                                    setHighlightedIndex(prev => 
+                                        prev < classes.length - 1 ? prev + 1 : prev
+                                    );
+                                } else if (e.key === 'ArrowUp') {
+                                    e.preventDefault();
+                                    setHighlightedIndex(prev => prev > 0 ? prev - 1 : 0);
+                                } else if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (classes[highlightedIndex]) {
+                                        handleDropdownSelect(classes[highlightedIndex].uuid);
+                                        setDropdownOpen(false);
+                                    }
+                                }
+                            }}
                             placeholder="Class name"
                             className="font-inter border-[#404040] border placeholder:text-xs selection:bg-blue-400 text-xs" />
                         <TooltipProvider>
-                            <Tooltip delayDuration={300} >
-                            <TooltipTrigger asChild >
-                                <svg viewBox="0 0 24 24" height={34} width={34} fill="none" xmlns="http://www.w3.org/2000/svg"
-                                    className="cursor-pointer hover:bg-[#404040] p-1 rounded-md transition duration-300">
-                                    <path d="M11.5 19C15.6421 19 19 15.6421 19 11.5C19 7.35786 15.6421 4 11.5 4C7.35786 4 4 7.35786 4 11.5C4 15.6421 7.35786 19 11.5 19Z" stroke="#fafafa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-                                    <path d="M20.9999 20.9999L16.6499 16.6499" stroke="#fafafa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-                                </svg>
-                            </TooltipTrigger>
-                            <TooltipContent  className="text-xs bg-accent font-figtree text-[#fafafa]" side='bottom' >
-                                <p>Search class</p>
-                            </TooltipContent>
-                        </Tooltip>
+                            <Tooltip delayDuration={300}>
+                                <TooltipTrigger asChild>
+                                    <button className="cursor-pointer hover:bg-[#404040] p-1 rounded-md transition duration-300">
+                                        <Search className="h-6 w-6 text-[#fafafa]" />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="font-figtree" side='bottom'>
+                                    <p>Search class</p>
+                                </TooltipContent>
+                            </Tooltip>
                         </TooltipProvider>
                     </div>
                     
@@ -115,13 +137,16 @@ export default function ClassSearch() {
                                 exit={{ opacity: 0, y: -20 }}
                                 tabIndex={-1}
                             >
-                                {classes.map(c => (
+                                {classes.map((c, index) => (
                                     <motion.li
                                         key={c.uuid}
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         onMouseDown={async (e) => {e.preventDefault(); await handleDropdownSelect(c.uuid); setDropdownOpen(false);}}
-                                        className="p-2 text-sm text-[#fafafa] hover:bg-[#181818] hover:cursor-pointer scroll-p-4 font-inter last:border-b-0"
+                                        onMouseEnter={() => setHighlightedIndex(index)}
+                                        className={`p-2 text-sm text-[#fafafa] hover:cursor-pointer scroll-p-4 font-inter last:border-b-0 ${
+                                            index === highlightedIndex ? 'bg-[#181818]' : 'hover:bg-[#181818]'
+                                        }`}
                                     >
                                         <strong>{c.dept} {c.code}</strong> - {c.title}
                                     </motion.li>
@@ -136,18 +161,42 @@ export default function ClassSearch() {
                     <Accordion type="multiple" defaultValue={["item-1", "item-2"]} className="font-figtree">
                         {/* Searched Section */}
                         <AccordionItem value="item-1">
-                            <AccordionTrigger className="text-lg text-green-400 font-bold hover:no-underline hover:cursor-pointer">Searched</AccordionTrigger>
-                            <AccordionContent className="font-inter max-h-[300px] overflow-y-auto">
+                            <AccordionTrigger className="text-lg text-green-400 font-bold hover:no-underline hover:cursor-pointer">
+                                <div className="flex items-center justify-between gap-2 w-full">
+                                    <span>Searched</span>
+                                    {selectedClasses.length > 0 && (
+                                        <span
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedClasses([]);
+                                                setSearchQuery('');
+                                            }}
+                                            className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 cursor-pointer transition-colors font-inter font-normal"
+                                        >
+                                            Clear all searched
+                                        </span>
+                                    )}
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="font-inter max-h-[300px] overflow-y-scroll scrollbar-hidden">
                                 {selectedClasses.length === 0 ? (
                                     <div className="text-sm text-[#888888] font-figtree">No classes searched</div>
                                 ) : (
                                     selectedClasses.map(c => (
-                                        <Class
-                                            key={c.uuid}
-                                            uuid={c.uuid}
-                                            classcode={c.code || ''}
-                                            dept={c.dept || ''}
-                                        />
+                                        <div key={c.uuid} className="relative group">
+                                            <Class
+                                                uuid={c.uuid}
+                                                classcode={c.code || ''}
+                                                dept={c.dept || ''}
+                                            />
+                                            <button
+                                                onClick={() => setSelectedClasses(prev => prev.filter(cls => cls.uuid !== c.uuid))}
+                                                className="absolute top-3 right-3 cursor-pointer rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[#080808]/80 hover:bg-[#181818]"
+                                                title="Remove from searched"
+                                            >
+                                                { <Trash2 className="h-4 w-4 text-red-500" /> }
+                                            </button>
+                                        </div>
                                     ))
                                 )}
                             </AccordionContent>
@@ -156,7 +205,7 @@ export default function ClassSearch() {
                         {/* Currently Added Section */}
                         <AccordionItem value="item-2" >
                             <AccordionTrigger className="text-lg text-purple-400 font-bold hover:no-underline hover:cursor-pointer">Currently Selected</AccordionTrigger>
-                            <AccordionContent className="font-inter max-h-[300px] overflow-y-auto">
+                            <AccordionContent className="font-inter max-h-[300px] overflow-y-scroll scrollbar-hidden">
                                 {draftSchedule.length === 0 ? (
                                     <div className="text-sm text-[#888888] font-figtree">No classes added</div>
                                 ) : (
@@ -178,10 +227,8 @@ export default function ClassSearch() {
 
                                         return Object.values(groupedClasses).map((classGroup: any) => (
                                             <div key={`${classGroup.dept}-${classGroup.code}`} className="bg-[#181818] rounded-lg p-3 mb-2 border border-[#303030]">
-                                                <div className="font-bold text-white mb-2">
-                                                    {classGroup.dept} {classGroup.code}                                                </div>
-                                                <div className="text-sm text-[#A8A8A8] mb-2">
-                                                    {classGroup.title}
+                                                <div className="font-bold text-white mb-4">
+                                                    {classGroup.dept} {classGroup.code}: {classGroup.title}                                              
                                                 </div>
                                                 <div className="flex flex-col gap-2">
                                                     {classGroup.sections.map((section: any) => (

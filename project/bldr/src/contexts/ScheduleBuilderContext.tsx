@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { timeToDecimal } from "@/lib/timeUtils";
 import { parseDays } from "@/lib/timeUtils";
 import { toast } from "sonner";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, AlertCircle, Check, Repeat } from "lucide-react";
 
 const ScheduleBuilderContext = createContext<any>(undefined);
 
@@ -45,6 +45,13 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
     const newEnd = timeToDecimal(newClass.endtime);
 
     for (const existing of existingClasses) {
+      // Skip conflict check if it's the same class (dept, code, component) - we'll replace it anyway
+      if (existing.dept === newClass.dept && 
+          existing.code === newClass.code && 
+          existing.component === newClass.component) {
+        continue;
+      }
+
       const existingDays = parseDays(existing.days);
       const existingStart = timeToDecimal(existing.starttime);
       const existingEnd = timeToDecimal(existing.endtime);
@@ -73,74 +80,90 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
   };
 
   const addClassToDraft = (classItem: any) => {
-    setDraftSchedule((prev: any) => {
-      // Check if class with this UUID already exists
-      const exists = prev.some((item: any) => item.uuid === classItem.uuid);
-      if (exists) {
-        return prev; // Don't add duplicate UUID
-      }
-            // Check if a section of the same class (classID) and same component type already exists
-      const sameComponentExists = prev.some((item: any) => 
+    // Check conditions before state update
+    const exists = draftSchedule.some((item: any) => item.uuid === classItem.uuid);
+    if (exists) {
+      // Show toast notification for duplicate
+      toast.error(
+        `Section #${classItem.classID} of ${classItem.dept} ${classItem.code} (${classItem.component}) is already in the schedule`,
+        {
+          style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+          duration: 3000,
+          icon: <AlertCircle className="h-5 w-5 text-blue-500" />,
+        }
+      );
+      return; // Don't add duplicate UUID
+    }
+
+    const sameComponentExists = draftSchedule.some((item: any) => 
+      item.dept === classItem.dept &&
+      item.code === classItem.code &&
+      item.component === classItem.component
+    );
+
+    const alreadyExists = draftSchedule.some((item: any) => 
+      item.classID === classItem.classID
+    );
+    
+  
+    const conflictCheck = checkTimeConflict(classItem, draftSchedule);
+    if (conflictCheck.conflict) {
+      // Show toast notification for conflict
+      const conflicting = conflictCheck.conflictingClass;
+      toast.error(
+        `Time conflict with ${conflicting.dept} ${conflicting.code} (${conflicting.component})`,
+        {
+          style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+          duration: 3000,
+          icon: <AlertTriangle className="h-5 w-5 text-yellow-500" />,
+        }
+      );
+      return;
+    }
+
+    if (sameComponentExists) {
+      // Find the old class being replaced for the toast notification
+      const oldClass = draftSchedule.find((item: any) => 
         item.dept === classItem.dept &&
         item.code === classItem.code &&
         item.component === classItem.component
       );
 
-      const conflictCheck = checkTimeConflict(classItem, prev);
-      if (conflictCheck.conflict) {
-        // Show toast notification for conflict
-        const conflicting = conflictCheck.conflictingClass;
-        toast.error(
-          `Time conflict with ${conflicting.dept} ${conflicting.code} (${conflicting.component})`,
-          {
-            style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
-            duration: 3000,
-            icon: <AlertTriangle className="h-5 w-5" />,
-          }
-        );
-        return prev;
-      }
+      // Show toast notification for replacement
+      toast.success(
+        `Replaced ${oldClass.component} #${oldClass.classID} with #${classItem.classID}`,
+        {
+          style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+          duration: 3000,
+          icon: <Repeat className="h-5 w-5 text-blue-500" />,
+        }
+      );
       
-      if (sameComponentExists) {
-        // Check if replacement would cause conflicts with other classes
-        const otherClasses = prev.filter((item: any) => 
-          !(item.dept === classItem.dept &&
-            item.code === classItem.code &&
-            item.component === classItem.component)
-        );
-
-        
-        // const replacementConflict = checkTimeConflict(classItem, otherClasses);
-        // if (replacementConflict.conflict) {
-        //   const conflicting = replacementConflict.conflictingClass;
-        //   console.log(`Conflict detected when replacing with ${classItem.dept} ${classItem.code} ${classItem.classID}`);
-        //   toast.error(
-        //     `Time conflict with ${conflicting.dept} ${conflicting.code} (${conflicting.component})`,
-        //     {
-        //       style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
-        //       duration: 3000,
-        //       icon: <AlertTriangle className="h-5 w-5 text-yellow-300" />,
-        //     }
-        //   );
-        //   return prev;
-        // }
-        
-        // Replace the existing section of this component type
-        return prev.map((item: any) => 
+      // Replace the existing section of this component type
+      setDraftSchedule((prev: any) => 
+        prev.map((item: any) => 
           item.dept === classItem.dept &&
           item.code === classItem.code &&
           item.component === classItem.component
             ? classItem
             : item
-        );
-      }
-      
-      prev.data.map((item: any) =>
-        console.log(`Existing item in draft: ${item.dept} ${item.code} ${item.classID}`)
+        )
       );
-      // Add new class section
-      return [...prev, classItem];
-    });
+      return;
+    }
+    
+    // Show toast notification for new class addition
+    toast.success(
+      `Added ${classItem.dept} ${classItem.code} (${classItem.component}) #${classItem.classID} to schedule`,
+      {
+        style: { fontFamily: 'Inter', backgroundColor: '#404040', color: '#fff' },
+        duration: 3000,
+        icon: <Check className="h-5 w-5 text-green-500" />,
+      }
+    );
+    
+    // Add new class section
+    setDraftSchedule((prev: any) => [...prev, classItem]);
   };
 
   const removeClassFromDraft = (index: number) => {
