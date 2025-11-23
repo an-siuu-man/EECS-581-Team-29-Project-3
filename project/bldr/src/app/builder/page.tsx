@@ -73,7 +73,7 @@ export default function Builder() {
                 icon: <Trash2 className="h-5 w-5" />,
               });
             }}
-            className="font-dmsans"
+            className="font-dmsans cursor-pointer"
           >
             <Check className="h-4 w-4 mr-1" />
             Confirm
@@ -82,7 +82,7 @@ export default function Builder() {
             size="sm"
             variant="secondary"
             onClick={() => toast.dismiss()}
-            className="font-dmsans"
+            className="font-dmsans cursor-pointer"
           >
             <X className="h-4 w-4 mr-1" />
             Cancel

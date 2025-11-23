@@ -242,20 +242,47 @@ export function Sidebar() {
                         />
                         <Button
                           type="button"
-                          onClick={() => {
+                          onClick={async () => {
                             if (newScheduleName.trim()) {
-                              // TODO: Implement schedule creation API call
-                              // For now, just add to local list
-                              // handleScheduleClick(newScheduleName.trim());
-                              const newSchedule = {
-                                id: Date.now().toString(),
-                                name: newScheduleName.trim(),
-                                semester: activeSemester || "Fall 2025",
-                                year: 2025,
-                                classes: [],
-                              };
-                              addScheduleToList(newSchedule);
-                              setNewScheduleName("");
+                              try {
+                                const response = await fetch(
+                                  "/api/createSchedule",
+                                  {
+                                    method: "POST",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                      scheduleName: newScheduleName.trim(),
+                                      semester: activeSemester || "Fall",
+                                      year: 2025,
+                                    }),
+                                  }
+                                );
+
+                                if (!response.ok) {
+                                  throw new Error("Failed to create schedule");
+                                }
+
+                                const data = await response.json();
+
+                                // Add the new schedule to the local list
+                                const newSchedule = {
+                                  id: data.schedule.scheduleid,
+                                  name: data.schedule.schedulename,
+                                  semester: data.schedule.semester,
+                                  year: data.schedule.year,
+                                  classes: [],
+                                };
+                                addScheduleToList(newSchedule);
+                                setNewScheduleName("");
+                              } catch (error) {
+                                console.error(
+                                  "Error creating schedule:",
+                                  error
+                                );
+                                // You might want to show an error message to the user here
+                              }
                             }
                           }}
                           className="bg-[#fafafa] text-xs text-[#1a1a1a] hover:bg-[#404040] hover:text-[#fafafa] cursor-pointer font-dmsans text-md"
