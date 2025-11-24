@@ -292,7 +292,7 @@ export function Sidebar() {
                       </div>
 
                       {/* Schedule list */}
-                      <ul className="list-none pl-2">
+                      <ul className="list-none">
                         {userSchedules.length === 0 ? (
                           <p className="text-sm text-gray-400">
                             No schedules found.
@@ -314,7 +314,7 @@ export function Sidebar() {
                                 }`}
                               >
                                 <button
-                                  className="p-2 cursor-pointer w-full text-left"
+                                  className="py-2 px-3 cursor-pointer w-full text-left"
                                   onClick={() => {
                                     loadSchedule(schedule.id);
                                     setActiveSemester(schedule.semester);

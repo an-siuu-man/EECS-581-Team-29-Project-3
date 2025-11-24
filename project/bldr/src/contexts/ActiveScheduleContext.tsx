@@ -132,9 +132,9 @@ export const ActiveScheduleProvider = ({
     try {
       const response = await fetch("/api/getUserSchedules", {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 

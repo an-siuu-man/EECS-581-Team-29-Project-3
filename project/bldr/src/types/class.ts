@@ -5,16 +5,16 @@
  */
 export interface ClassSection {
   uuid: string;
-  classID: string;                 // Maps to classid from database
+  classID: string; // Maps to classid from database
   dept: string;
   code: string;
   title: string;
   days: string;
   starttime: string;
   endtime: string;
-  component: string;               // e.g., 'LEC', 'LAB'
+  component: string; // e.g., 'LEC', 'LAB'
   instructor?: string;
-  seats_available?: number;        // Maps to availseats
+  seats_available?: number; // Maps to availseats
   credithours?: number;
   location?: string;
   room?: string;
@@ -27,7 +27,7 @@ export interface ClassData {
   dept: string;
   code: string;
   title: string;
-  description?: string;            // Not in DB, fetched from external API
+  description?: string; // Not in DB, fetched from external API
   sections: ClassSection[];
 }
 
@@ -79,20 +79,20 @@ export interface SearchedClass {
  * Represents a class item in the calendar/schedule view
  */
 export interface CalendarClassItem {
-  uuid?: string;                   // From allclasses
-  classID?: string;                // Maps to classid
+  uuid?: string; // From allclasses
+  classID?: string; // Maps to classid
   days: string;
-  startTimeInDecimal: number;      // Calculated from starttime
-  duration: number;                // Calculated from starttime and endtime
-  color?: string;                  // UI-specific
+  startTimeInDecimal: number; // Calculated from starttime
+  duration: number; // Calculated from starttime and endtime
+  color?: string; // UI-specific
   dept: string;
   code: string;
   title?: string;
   instructor?: string;
-  component?: string;              // e.g., 'LEC', 'LAB'
-  starttime?: string;              // Original time string
-  endtime?: string;                // Original time string
-  credithours?: number;            // Maps to credithours
+  component?: string; // e.g., 'LEC', 'LAB'
+  starttime?: string; // Original time string
+  endtime?: string; // Original time string
+  credithours?: number; // Maps to credithours
   location?: string;
   room?: string;
 }
