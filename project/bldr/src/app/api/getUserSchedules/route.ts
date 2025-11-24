@@ -46,9 +46,8 @@ export async function GET(req: NextRequest) {
       .from('allschedules')
       .select('scheduleid, schedulename, semester, year, createdat, lastedited')
       .in('scheduleid', scheduleIds);
-
+        
     if (schedulesError) {
-      console.error('[getUserSchedules] Error fetching schedules:', schedulesError);
       return Response.json({ error: 'Failed to fetch schedule details' }, { status: 500 });
     }
 
@@ -165,7 +164,6 @@ export async function POST(req: NextRequest) {
       .eq('isactive', true);
 
     if (userScheduleError) {
-      console.error('[getUserSchedules POST] Error:', userScheduleError);
       return Response.json({ error: 'Failed to fetch schedules' }, { status: 500 });
     }
 
@@ -181,7 +179,6 @@ export async function POST(req: NextRequest) {
       .in('scheduleid', scheduleIds);
 
     if (schedulesError) {
-      console.error('[getUserSchedules POST] Error fetching schedules:', schedulesError);
       return Response.json({ error: 'Failed to fetch schedule details' }, { status: 500 });
     }
 

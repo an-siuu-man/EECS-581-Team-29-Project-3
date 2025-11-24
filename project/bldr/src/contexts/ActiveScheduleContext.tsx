@@ -43,7 +43,7 @@ export const ActiveScheduleProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   // Helper to sync state with localStorage
   const usePersistedState = <T,>(key: string, initialValue: T) => {
     const [state, setState] = useState<T>(() => {
@@ -124,18 +124,18 @@ export const ActiveScheduleProvider = ({
 
   // Fetch user schedules from database using Supabase user ID
   const fetchUserSchedules = async () => {
-    if (!user?.id) {
-      console.log("No user logged in");
+    if (!user?.id || !session?.access_token) {
+      console.log("No user logged in or no access token");
       return;
     }
 
     try {
-      console.log("Fetching schedules for user:", user.id);
-
       const response = await fetch("/api/getUserSchedules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`
+        },
       });
 
       if (!response.ok) {
@@ -143,6 +143,7 @@ export const ActiveScheduleProvider = ({
       }
 
       const data = await response.json();
+      console.log("Fetched user schedules:", data.schedules);
       setUserSchedules(data.schedules || []);
     } catch (error) {
       console.error("Error fetching user schedules:", error);
