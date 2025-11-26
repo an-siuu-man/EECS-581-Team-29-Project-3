@@ -69,8 +69,8 @@ export async function GET(req: NextRequest) {
       (schedules || []).map(async (schedule: any) => {
         // Get classes for this schedule
         const { data: scheduleClasses, error: classesError } = await supabase
-          .from("scheduleclasses")
-          .select("uuid, classid")
+          .from("schedule_classes")
+          .select("class_uuid")
           .eq("scheduleid", schedule.scheduleid);
 
         if (classesError) {
@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Fetch class details from allclasses table
-        const classUuids = scheduleClasses.map((sc: any) => sc.uuid);
+        const classUuids = scheduleClasses.map((sc: any) => sc.class_uuid);
         const { data: classDetails, error: detailsError } = await supabase
           .from("allclasses")
           .select(

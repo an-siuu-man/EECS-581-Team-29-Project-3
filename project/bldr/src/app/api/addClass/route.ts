@@ -1,15 +1,15 @@
 // api/addClass/route.ts
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from "../../lib/supabaseClient";
 
 type AddBody = {
-  scheduleid: string;         // schedule UUID
-  classId?: number;           // integer classid in allclasses
-  classUuid?: string;         // uuid in allclasses
+  scheduleid: string; // schedule UUID
+  classId?: number; // integer classid in allclasses
+  classUuid?: string; // uuid in allclasses
   // Optional: allow adding even if conflict, but return conflicts in response
   allowConflict?: boolean;
 };
 
-const DAY_CHARS = new Set(['M','T','W','R','F','S','U']); // R = Thursday
+const DAY_CHARS = new Set(["M", "T", "W", "R", "F", "S", "U"]); // R = Thursday
 
 function parseDays(days: string | null): Set<string> {
   const set = new Set<string>();
@@ -31,7 +31,12 @@ function toMinutes(hhmm: string | null): number | null {
   return h * 60 + mi;
 }
 
-function timesOverlap(aStart: number, aEnd: number, bStart: number, bEnd: number): boolean {
+function timesOverlap(
+  aStart: number,
+  aEnd: number,
+  bStart: number,
+  bEnd: number
+): boolean {
   // strict overlap if intervals intersect with positive duration
   return aStart < bEnd && bStart < aEnd;
 }
@@ -42,59 +47,76 @@ export async function POST(req: Request) {
     const { scheduleid, classId, classUuid, allowConflict } = body;
 
     if (!scheduleid) {
-      return Response.json({ error: 'Missing scheduleid' }, { status: 400 });
+      return Response.json({ error: "Missing scheduleid" }, { status: 400 });
     }
     if (classId == null && !classUuid) {
-      return Response.json({ error: 'Provide classId or classUuid' }, { status: 400 });
+      return Response.json(
+        { error: "Provide classId or classUuid" },
+        { status: 400 }
+      );
     }
 
     // 1) Resolve target class by id or uuid
     const { data: target, error: targetErr } = await supabase
-      .from('allclasses')
-      .select('uuid, classid, dept, code, title, starttime, endtime, days, availseats, credithours, component, location, room, instructor')
+      .from("allclasses")
+      .select(
+        "uuid, classid, dept, code, title, starttime, endtime, days, availseats, credithours, component, location, room, instructor"
+      )
       .match(classId != null ? { classid: classId } : { uuid: classUuid! })
       .maybeSingle();
 
     if (targetErr) {
-      console.error('[addClass] fetch target error:', targetErr);
-      return Response.json({ error: 'Failed to fetch class' }, { status: 500 });
+      console.error("[addClass] fetch target error:", targetErr);
+      return Response.json({ error: "Failed to fetch class" }, { status: 500 });
     }
     if (!target) {
-      return Response.json({ error: 'Class not found' }, { status: 404 });
+      return Response.json({ error: "Class not found" }, { status: 404 });
     }
 
     // 2) Check if already in schedule (fast path)
     {
       const { data: exists, error: existsErr } = await supabase
-        .from('scheduleclasses')
-        .select('scheduleid, classid')
-        .eq('scheduleid', scheduleid)
-        .eq('classid', target.classid)
+        .from("schedule_classes")
+        .select("scheduleid, class_uuid")
+        .eq("scheduleid", scheduleid)
+        .eq("class_uuid", target.uuid)
         .limit(1);
 
       if (existsErr) {
-        console.error('[addClass] exists check error:', existsErr);
-        return Response.json({ error: 'Failed to check schedule' }, { status: 500 });
+        console.error("[addClass] exists check error:", existsErr);
+        return Response.json(
+          { error: "Failed to check schedule" },
+          { status: 500 }
+        );
       }
       if (exists && exists.length > 0) {
-        return Response.json({ error: 'Class already in schedule' }, { status: 409 });
+        return Response.json(
+          { error: "Class already in schedule" },
+          { status: 409 }
+        );
       }
     }
 
     // 3) Optional: seat availability check
-    if (typeof target.availseats === 'number' && target.availseats <= 0) {
-      return Response.json({ error: 'No available seats for this class' }, { status: 409 });
+    if (typeof target.availseats === "number" && target.availseats <= 0) {
+      return Response.json(
+        { error: "No available seats for this class" },
+        { status: 409 }
+      );
     }
 
     // 4) Time conflict check against existing classes in the schedule
     const { data: existingRows, error: existingErr } = await supabase
-      .from('scheduleclasses')
-      .select('classid')
-      .eq('scheduleid', scheduleid);
+      .from("schedule_classes")
+      .select("class_uuid")
+      .eq("scheduleid", scheduleid);
 
     if (existingErr) {
-      console.error('[addClass] fetch existing error:', existingErr);
-      return Response.json({ error: 'Failed to fetch schedule contents' }, { status: 500 });
+      console.error("[addClass] fetch existing error:", existingErr);
+      return Response.json(
+        { error: "Failed to fetch schedule contents" },
+        { status: 500 }
+      );
     }
 
     let conflicts: Array<{
@@ -108,26 +130,34 @@ export async function POST(req: Request) {
     }> = [];
 
     if (existingRows && existingRows.length > 0) {
-      const existingIds = existingRows.map(r => r.classid);
+      const existingUuids = existingRows.map((r) => r.class_uuid);
 
       const { data: existingClasses, error: ecErr } = await supabase
-        .from('allclasses')
-        .select('classid, dept, code, title, starttime, endtime, days')
-        .in('classid', existingIds);
+        .from("allclasses")
+        .select("uuid, classid, dept, code, title, starttime, endtime, days")
+        .in("uuid", existingUuids);
 
       if (ecErr) {
-        console.error('[addClass] fetch existing class meta error:', ecErr);
-        return Response.json({ error: 'Failed to fetch existing class details' }, { status: 500 });
+        console.error("[addClass] fetch existing class meta error:", ecErr);
+        return Response.json(
+          { error: "Failed to fetch existing class details" },
+          { status: 500 }
+        );
       }
 
       const tgtDays = parseDays(target.days);
       const tgtStart = toMinutes(target.starttime);
       const tgtEnd = toMinutes(target.endtime);
 
-      if (tgtStart != null && tgtEnd != null && tgtEnd > tgtStart && tgtDays.size > 0) {
+      if (
+        tgtStart != null &&
+        tgtEnd != null &&
+        tgtEnd > tgtStart &&
+        tgtDays.size > 0
+      ) {
         for (const ec of existingClasses ?? []) {
           const ecDays = parseDays(ec.days);
-          const dayOverlap = [...tgtDays].some(d => ecDays.has(d));
+          const dayOverlap = [...tgtDays].some((d) => ecDays.has(d));
           if (!dayOverlap) continue;
 
           const ecStart = toMinutes(ec.starttime);
@@ -142,7 +172,7 @@ export async function POST(req: Request) {
               withCode: ec.code ?? undefined,
               withDays: ec.days ?? null,
               withStart: ec.starttime ?? null,
-              withEnd: ec.endtime ?? null
+              withEnd: ec.endtime ?? null,
             });
           }
         }
@@ -152,7 +182,7 @@ export async function POST(req: Request) {
     if (conflicts.length > 0 && !allowConflict) {
       return Response.json(
         {
-          error: 'Time conflict detected',
+          error: "Time conflict detected",
           conflicts,
           target: {
             classid: target.classid,
@@ -161,8 +191,8 @@ export async function POST(req: Request) {
             code: target.code,
             days: target.days,
             starttime: target.starttime,
-            endtime: target.endtime
-          }
+            endtime: target.endtime,
+          },
         },
         { status: 409 }
       );
@@ -170,15 +200,18 @@ export async function POST(req: Request) {
 
     // 5) Insert mapping (upsert ensures idempotency if raced)
     const { error: insErr } = await supabase
-      .from('scheduleclasses')
-      .upsert(
-        [{ scheduleid, classid: target.classid }],
-        { onConflict: 'scheduleid,classid', ignoreDuplicates: false }
-      );
+      .from("schedule_classes")
+      .upsert([{ scheduleid, class_uuid: target.uuid }], {
+        onConflict: "scheduleid,class_uuid",
+        ignoreDuplicates: false,
+      });
 
     if (insErr) {
-      console.error('[addClass] insert error:', insErr);
-      return Response.json({ error: 'Failed to add class to schedule' }, { status: 500 });
+      console.error("[addClass] insert error:", insErr);
+      return Response.json(
+        { error: "Failed to add class to schedule" },
+        { status: 500 }
+      );
     }
 
     return Response.json(
@@ -192,16 +225,17 @@ export async function POST(req: Request) {
           code: target.code,
           days: target.days,
           starttime: target.starttime,
-          endtime: target.endtime
+          endtime: target.endtime,
         },
-        warnings: conflicts.length > 0 ? { timeConflicts: conflicts } : undefined
+        warnings:
+          conflicts.length > 0 ? { timeConflicts: conflicts } : undefined,
       },
       { status: 200 }
     );
   } catch (err: any) {
-    console.error('[addClass] server error:', err);
+    console.error("[addClass] server error:", err);
     return Response.json(
-      { error: 'Internal server error', details: err?.message },
+      { error: "Internal server error", details: err?.message },
       { status: 500 }
     );
   }

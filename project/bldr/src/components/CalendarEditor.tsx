@@ -96,8 +96,14 @@ const CalendarEditor = () => {
                                 "bg-purple-300",
                                 "bg-red-300",
                               ];
-                              const colorIndex =
-                                (cls.dept?.charCodeAt(0) || 0) % colors.length;
+                              // Derive a small, stable hash from the first two letters
+                              // of the department to increase color variance.
+                              const dept = (cls.dept || "").toUpperCase();
+                              let hash = 0;
+                              if (dept.length > 0) hash = dept.charCodeAt(0);
+                              if (dept.length > 1)
+                                hash = hash * 31 + dept.charCodeAt(1);
+                              const colorIndex = Math.abs(hash) % colors.length;
 
                               return (
                                 <TooltipProvider key={idx}>

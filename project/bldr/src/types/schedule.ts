@@ -1,5 +1,5 @@
 // Schedule related types
-// Matches the 'allschedules', 'scheduleclasses', and 'userschedule' tables
+// Matches the 'allschedules', 'schedule_classes', and 'userschedule' tables
 import { CalendarClassItem, ClassSection } from "./class";
 
 /**
@@ -15,12 +15,12 @@ export interface AllSchedulesRecord {
 }
 
 /**
- * Represents a schedule-class relationship from the scheduleclasses table
+ * Represents a schedule-class relationship from the schedule_classes table
  */
 export interface ScheduleClassesRecord {
   scheduleid: string; // uuid (FK to allschedules)
-  classid: number; // integer (NOT NULL)
-  uuid: string; // uuid (FK to allclasses)
+  class_uuid: string; // uuid (FK to allclasses)
+  added_at?: Date | string; // timestamp (default CURRENT_TIMESTAMP)
 }
 
 /**

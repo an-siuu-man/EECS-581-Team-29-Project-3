@@ -67,11 +67,25 @@ export async function POST(req: Request) {
     }
 
     // --- step 1: ensure target mapping exists (idempotent) ------------------
-    // Uses the UNIQUE(scheduleid,classid) constraint to avoid duplicates.
+    // Uses the UNIQUE(scheduleid,class_uuid) constraint to avoid duplicates.
+    // First get the uuid for toClassId
+    const { data: toClass, error: toClassErr } = await supabase
+      .from("allclasses")
+      .select("uuid")
+      .eq("classid", toClassId)
+      .maybeSingle();
+
+    if (toClassErr || !toClass) {
+      return Response.json(
+        { error: "Failed to resolve target class uuid" },
+        { status: 500 }
+      );
+    }
+
     const { error: upsertErr } = await supabase
-      .from("scheduleclasses")
-      .upsert([{ scheduleid, classid: toClassId }], {
-        onConflict: "scheduleid,classid",
+      .from("schedule_classes")
+      .upsert([{ scheduleid, class_uuid: toClass.uuid }], {
+        onConflict: "scheduleid,class_uuid",
         ignoreDuplicates: false,
       });
 
@@ -84,26 +98,37 @@ export async function POST(req: Request) {
     }
 
     // --- step 2: remove the old mapping if it exists ------------------------
-    const { error: delErr, count: deletedOld } = await supabase
-      .from("scheduleclasses")
-      .delete({ count: "exact" })
-      .eq("scheduleid", scheduleid)
-      .eq("classid", fromClassId);
+    // Get the uuid for fromClassId
+    const { data: fromClass, error: fromClassErr } = await supabase
+      .from("allclasses")
+      .select("uuid")
+      .eq("classid", fromClassId)
+      .maybeSingle();
 
-    if (delErr) {
-      console.error("[replaceClass] delete old mapping error:", delErr);
-      // roll forward anyway: target is already present, old may not have existed
-      return Response.json(
-        { error: "Target added, but failed to remove old class" },
-        { status: 500 }
+    if (fromClassErr || !fromClass) {
+      // If we can't find the old class, that's okay - it might not be in the schedule
+      console.warn(
+        "[replaceClass] Could not resolve fromClass uuid, skipping delete"
       );
+    } else {
+      const { error: delErr, count: deletedOld } = await supabase
+        .from("schedule_classes")
+        .delete({ count: "exact" })
+        .eq("scheduleid", scheduleid)
+        .eq("class_uuid", fromClass.uuid);
+
+      if (delErr) {
+        console.error("[replaceClass] delete old mapping error:", delErr);
+        // roll forward anyway: target is already present, old may not have existed
+        return Response.json(
+          { error: "Target added, but failed to remove old class" },
+          { status: 500 }
+        );
+      }
     }
 
     // optional: if nothing was deleted, inform the caller (helps UX)
-    const message =
-      deletedOld && deletedOld > 0
-        ? "Replaced class in schedule."
-        : "Target ensured in schedule; source mapping was not present.";
+    const message = "Replaced class in schedule.";
 
     return Response.json(
       {
@@ -113,7 +138,6 @@ export async function POST(req: Request) {
           scheduleid,
           fromClassId,
           toClassId,
-          deletedOld: deletedOld ?? 0,
         },
       },
       { status: 200 }
