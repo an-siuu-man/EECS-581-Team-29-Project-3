@@ -91,7 +91,7 @@ export default function Class(props: ClassProps) {
               key={section.uuid}
               onClick={() => handleSectionClick(section, classInfo.data[0])}
               className={
-                `w-full font-inter rounded-md mt-2 bg-[#181818] transition duration-100 px-3 py-2 text-left` +
+                `w-full font-inter rounded-md mt-2 bg-[#181818] transition duration-100 px-3  text-left` +
                 ((section.seats_available ?? 0) > 0
                   ? " cursor-pointer hover:bg-[#232323]"
                   : " cursor-default opacity-60")
@@ -112,9 +112,13 @@ export default function Class(props: ClassProps) {
                         ? `${section.starttime} - ${section.endtime}`
                         : section.starttime || section.endtime || ""}
                     </span>
-                    {section.instructor && (
+                    {section.instructor ? (
                       <span className="text-xs text-[#a8a8a8]">
                         {section.instructor}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[#a8a8a8]">
+                        Instructor TBA
                       </span>
                     )}
                   </div>

@@ -26,9 +26,9 @@ const CalendarEditor = () => {
         <AnimatePresence>
           {draftScheduleName || draftSchedule.length > 0 ? (
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="w-full h-full"
             >
               <table className="table-fixed h-full w-full border-collapse">
@@ -89,12 +89,12 @@ const CalendarEditor = () => {
 
                               // Generate a color based on dept
                               const colors = [
-                                "bg-yellow-300",
-                                "bg-blue-300",
-                                "bg-green-300",
-                                "bg-pink-300",
-                                "bg-purple-300",
-                                "bg-red-300",
+                                "#f5d2d2",
+                                "#93c5fd",
+                                "#86efac",
+                                "#f9a8d4",
+                                "#c4b5fd",
+                                "#f87171",
                               ];
                               // Derive a small, stable hash from the first two letters
                               // of the department to increase color variance.
@@ -109,18 +109,21 @@ const CalendarEditor = () => {
                                 <TooltipProvider key={idx}>
                                   <Tooltip delayDuration={200}>
                                     <TooltipTrigger asChild>
-                                      <div
-                                        className={`${colors[colorIndex]} absolute flex flex-col items-start justify-center left-0.5 right-0.5 p-1 rounded-md text-[#1a1a1a] shadow-md z-10 overflow-hidden cursor-pointer`}
+                                      <motion.div
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className={`absolute flex flex-col items-start justify-center left-0.5 right-0.5 p-1 rounded-md text-[#333333] shadow-md z-10 overflow-hidden`}
                                         style={{
                                           top: `${offset}px`,
                                           height: `${height}px`,
+                                          backgroundColor: colors[colorIndex],
                                         }}
                                       >
                                         <div className="font-bold text-xs font-dmsans truncate w-full">
                                           {cls.dept} {cls.code} ({cls.component}
                                           )
                                         </div>
-                                      </div>
+                                      </motion.div>
                                     </TooltipTrigger>
                                     <TooltipContent
                                       className="font-figtree"

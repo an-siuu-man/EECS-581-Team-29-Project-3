@@ -19,7 +19,6 @@ import { SearchedClass } from "@/types";
 import { Trash2, Search } from "lucide-react";
 // import { useAuth } from "@/context/AuthContext";
 import Class from "./Class";
-import NewClass from "@/components/NewClass";
 import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
 
 export default function ClassSearch() {
