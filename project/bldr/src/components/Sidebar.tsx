@@ -156,49 +156,6 @@ export function Sidebar() {
               ></path>
             </svg>
 
-            {open && (
-              <motion.div
-                className="cursor-pointer transition-all duration-300"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-              >
-                <TooltipProvider>
-                  <Tooltip delayDuration={300}>
-                    <TooltipTrigger asChild>
-                      <svg
-                        viewBox="0 0 24 24"
-                        height={34}
-                        width={34}
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="cursor-pointer hover:bg-[#404040] p-1 rounded-md transition duration-300"
-                      >
-                        <path
-                          d="M11.5 19C15.6421 19 19 15.6421 19 11.5C19 7.35786 15.6421 4 11.5 4C7.35786 4 4 7.35786 4 11.5C4 15.6421 7.35786 19 11.5 19Z"
-                          stroke="#fafafa"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                        <path
-                          d="M20.9999 20.9999L16.6499 16.6499"
-                          stroke="#fafafa"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </svg>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      className="text-xs font-figtree z-100 text-[#fafafa]"
-                      side="bottom"
-                    >
-                      <p>Search schedule</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </motion.div>
-            )}
           </div>
 
           {/* Main Sidebar Content */}

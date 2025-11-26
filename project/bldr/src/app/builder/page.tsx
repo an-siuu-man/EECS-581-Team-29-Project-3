@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { LogOut, AlertCircle, Trash2, X, Check } from "lucide-react";
+import { LogOut, AlertCircle, Trash2, X, Check, Save } from "lucide-react";
 import ClassSearch from "@/components/ClassSearch";
 import { Sidebar } from "@/components/Sidebar";
 import CalendarEditor from "@/components/CalendarEditor";
@@ -159,8 +159,12 @@ export default function Builder() {
             {/* Calendar Section */}
             <div className="flex flex-col items-end">
               <CalendarEditor />
-              <div className="flex gap-4 mt-4">
-                <Button className="font-dmsans cursor-pointer w- max-w-[600px]">
+              <div className="flex gap-2">
+                <Button
+                  className="font-dmsans cursor-pointer w- max-w-[600px]"
+                  disabled={draftSchedule.length === 0}
+                >
+                  <Save className="h-4 w-4 mr-2" />
                   Save Schedule
                 </Button>
                 <Button
