@@ -32,21 +32,6 @@ export default function Class(props: ClassProps) {
       props.onSectionClick(section, classData);
     }
   };
-  // const handleClick = (classcode, classname, dept, credithours, catalogyr, major) => {
-  //     const isAlreadyPresent = selectedClasses.some((cls) => cls.classcode === classcode && cls.classname === classname);
-  //     const selected = isAlreadyPresent;
-
-  //     if (selected) {
-  //         setSelectedClasses((prevClasses) =>
-  //             prevClasses.filter((item) => item.classcode !== classcode || item.classname !== classname)
-  //         );
-  //     } else {
-  //         setSelectedClasses((prevClasses) => [
-  //             ...prevClasses,
-  //             { classcode, classname, dept, credithours, catalogyr, major },
-  //         ]);
-  //     }
-  // }
 
   const callAPI = async (dept: string, code: string) => {
     const r = await fetch(`/api/getClassInfo`, {
@@ -72,8 +57,12 @@ export default function Class(props: ClassProps) {
     <AnimatePresence>
       {classInfo && classInfo.data.length > 0 ? (
         <motion.div
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1, transition: { delay: 0.3 } }}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            transition: { delay: 0.3 },
+          }}
           exit={{ scale: 0.6, opacity: 0 }}
           key={props.uuid}
           className="flex flex-col p-2 mt-2 mb-6 rounded-md text-[#fafafa] border-2 max-w-[420px] border-[#404040] shadow-md justify-start items-center"

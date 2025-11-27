@@ -129,10 +129,6 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
         item.component === classItem.component
     );
 
-    const alreadyExists = draftSchedule.some(
-      (item: any) => item.classID === classItem.classID
-    );
-
     const conflictCheck = checkTimeConflict(classItem, draftSchedule);
     if (conflictCheck.conflict) {
       // Show toast notification for conflict
@@ -176,15 +172,17 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
       );
 
       // Replace the existing section of this component type
-      setDraftSchedule((prev: any) =>
-        prev.map((item: any) =>
+      setDraftSchedule((prev: any) => {
+        const next = prev.map((item: any) =>
           item.dept === classItem.dept &&
           item.code === classItem.code &&
           item.component === classItem.component
             ? classItem
             : item
-        )
-      );
+        );
+        console.log("draftSchedule:", next);
+        return next;
+      });
       return;
     }
 
@@ -202,14 +200,20 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
       }
     );
 
-    // Add new class section
-    setDraftSchedule((prev: any) => [...prev, classItem]);
+    // Add new class section — compute next array so we can log the updated value
+    setDraftSchedule((prev: any) => {
+      const next = [...prev, classItem];
+      console.log("The draftSchedule:", next);
+      return next;
+    });
   };
 
   const removeClassFromDraft = (index: number) => {
-    setDraftSchedule((prev: any) =>
-      prev.filter((_: any, i: number) => i !== index)
-    );
+    setDraftSchedule((prev: any) => {
+      const next = prev.filter((_: any, i: number) => i !== index);
+      console.log("The draftSchedule after removal:", next);
+      return next;
+    });
   };
 
   const clearDraft = () => {

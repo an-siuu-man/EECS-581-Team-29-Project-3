@@ -43,7 +43,7 @@ export const ActiveScheduleProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const { user, session } = useAuth();
+  const { user, session, loading } = useAuth();
   // Helper to sync state with localStorage
   const usePersistedState = <T,>(key: string, initialValue: T) => {
     const [state, setState] = useState<T>(() => {
@@ -85,6 +85,7 @@ export const ActiveScheduleProvider = ({
     if (schedule) {
       setActiveSchedule(schedule);
     }
+	
   };
 
   // Clear the active schedule
@@ -151,15 +152,19 @@ export const ActiveScheduleProvider = ({
     }
   };
 
-  // Fetch schedules when user changes
+  // Fetch schedules when user changes. Respect auth `loading` so we don't
+  // clear persisted state while the auth library is still initializing
+  // (this prevents wiping `activeSchedule` on page refresh).
   useEffect(() => {
+    if (loading) return; // wait until auth has finished initializing
+
     if (user?.id) {
       fetchUserSchedules();
     } else {
       setUserSchedules([]);
       setActiveSchedule(null);
     }
-  }, [user?.id]);
+  }, [user?.id, loading]);
 
   return (
     <ActiveScheduleContext.Provider

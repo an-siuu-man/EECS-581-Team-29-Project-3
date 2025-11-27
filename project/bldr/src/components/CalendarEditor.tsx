@@ -103,15 +103,9 @@ const CalendarEditor = () => {
                                 "#efc1d8", // rose
                               ];
 
-                              // Derive a small, stable hash from the first two letters
-                              // of the department to increase color variance.
                               const classcode = (
                                 `${cls.dept} ${cls.code}` || ""
                               ).toUpperCase();
-                              console.log(
-                                "Classcode for color hashing:",
-                                classcode
-                              );
                               let hash = 0;
                               let i = 0;
                               while (i < classcode.length) {
