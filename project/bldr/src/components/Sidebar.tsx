@@ -263,7 +263,7 @@ export function Sidebar() {
                             .map((schedule: any, index: number) => (
                               <li
                                 key={index}
-                                className={`text-sm text-[#fafafa] font-inter my-2  rounded-md transition duration-75 ${
+                                className={`text-sm text-[#fafafa] font-inter my-2  rounded-md transition-all duration-75 ${
                                   activeSchedule?.id === schedule.id
                                     ? "bg-[#555] font-bold"
                                     : "hover:bg-[#333]"

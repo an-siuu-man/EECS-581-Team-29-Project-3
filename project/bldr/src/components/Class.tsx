@@ -78,7 +78,7 @@ export default function Class(props: ClassProps) {
           key={props.uuid}
           className="flex flex-col p-2 mt-2 mb-6 rounded-md text-[#fafafa] border-2 max-w-[420px] border-[#404040] shadow-md justify-start items-center"
         >
-          <h1 className="font-dmsans text-lg font-bold self-start mb-1">
+          <h1 className="font-dmsans text-lg font-bold self-start">
             {classInfo.data[0].dept} {classInfo.data[0].code}:{" "}
             {classInfo.data[0].title}
           </h1>
@@ -97,7 +97,7 @@ export default function Class(props: ClassProps) {
                   : " cursor-default opacity-60")
               }
             >
-              <div className="flex flex-row w-full justify-between gap-4 items-start mb-1">
+              <div className="flex flex-row w-full justify-between gap-4 items-start my-1">
                 <div className="flex flex-row gap-4 items-start">
                   <div className="flex flex-col">
                     <span className="font-semibold">#{section.classID}</span>
@@ -125,7 +125,7 @@ export default function Class(props: ClassProps) {
                 </div>
                 <span
                   className={`text-sm font-semibold justify-self-end ${
-                    (section.seats_available ?? 0) === 0
+                    (section.seats_available ?? 0) <= 0
                       ? "text-gray-500"
                       : (section.seats_available ?? 0) <= 3
                       ? "text-red-400"

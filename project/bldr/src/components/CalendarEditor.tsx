@@ -89,20 +89,35 @@ const CalendarEditor = () => {
 
                               // Generate a color based on dept
                               const colors = [
-                                "#f5d2d2",
-                                "#93c5fd",
-                                "#86efac",
-                                "#f9a8d4",
-                                "#c4b5fd",
-                                "#f87171",
+                                "#f5d2d2", // soft pink (original vibe)
+                                "#efd8c1", // peach
+                                "#efefc1", // pastel yellow
+                                "#d8efc1", // yellow-green
+                                "#c1efc1", // mint
+                                "#c1efd8", // aqua
+                                "#c1efef", // light cyan
+                                "#c1d8ef", // baby blue
+                                "#c1c1ef", // periwinkle
+                                "#d8c1ef", // lavender
+                                "#efc1ef", // light magenta
+                                "#efc1d8", // rose
                               ];
+
                               // Derive a small, stable hash from the first two letters
                               // of the department to increase color variance.
-                              const dept = (cls.dept || "").toUpperCase();
+                              const classcode = (
+                                `${cls.dept} ${cls.code}` || ""
+                              ).toUpperCase();
+                              console.log(
+                                "Classcode for color hashing:",
+                                classcode
+                              );
                               let hash = 0;
-                              if (dept.length > 0) hash = dept.charCodeAt(0);
-                              if (dept.length > 1)
-                                hash = hash * 31 + dept.charCodeAt(1);
+                              let i = 0;
+                              while (i < classcode.length) {
+                                hash = hash * 31 + classcode.charCodeAt(i);
+                                i++;
+                              }
                               const colorIndex = Math.abs(hash) % colors.length;
 
                               return (
