@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useFloating, offset, flip, shift, size, autoUpdate, FloatingPortal } from "@floating-ui/react";
 import { Input } from "./ui/input";
 import {
   Accordion,
@@ -21,7 +22,6 @@ import { Trash2, Search } from "lucide-react";
 import Class from "./Class";
 import NewClass from "@/components/NewClass";
 import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
-
 export default function ClassSearch() {
   // Get schedule builder context
   const { draftSchedule, removeClassFromDraft } = useScheduleBuilder();
@@ -33,6 +33,31 @@ export default function ClassSearch() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const [dropdownPosStyle, setDropdownPosStyle] = useState<React.CSSProperties | undefined>(undefined);
+
+  // Floating UI setup
+  const { x, y, strategy, refs, update, middlewareData } = useFloating({
+    placement: "bottom-start",
+    middleware: [
+      offset(6),
+      flip(),
+      shift({ padding: 8 }),
+      size({
+        apply({ rects, availableWidth, availableHeight, elements }) {
+          // match the reference width and clamp to availableWidth
+          const width = Math.min(rects.reference.width, availableWidth - 8);
+          Object.assign(elements.floating.style, {
+            width: `${width}px`,
+            maxHeight: `${Math.min(320, availableHeight * 0.6)}px`,
+          });
+        },
+        padding: 8,
+      }),
+    ],
+    whileElementsMounted: autoUpdate,
+  });
+  
 
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -54,6 +79,18 @@ export default function ClassSearch() {
     }, 400);
     return () => clearTimeout(delay);
   }, [searchQuery]);
+
+  // Attach floating refs when wrapper is available and update position when open
+  useEffect(() => {
+    refs.setReference(wrapperRef.current);
+  }, [refs]);
+
+  useEffect(() => {
+    // update floating position when dropdown opens or class list changes
+    if (dropdownOpen) update?.();
+  }, [dropdownOpen, classes.length, update]);
+
+  
 
   function handleDropdownSelect(uuid: string) {
     const isAlreadyPresent = selectedClasses.some((cls) => cls.uuid === uuid);
@@ -90,6 +127,7 @@ export default function ClassSearch() {
         </h1>
         <div className="flex-col justify-start items-center w-full">
           <div
+            ref={wrapperRef}
             className="class-search-form flex flex-row justify-start items-center gap-2 w-full mt-5"
             tabIndex={-1}
             onFocus={() => setDropdownOpen(true)}
@@ -142,42 +180,48 @@ export default function ClassSearch() {
             </TooltipProvider>
           </div>
 
-          <AnimatePresence mode="popLayout">
+          <FloatingPortal>
             {classes.length > 0 && dropdownOpen && (
-              <motion.ul
+              <ul
+                ref={(el) => refs.setFloating(el)}
                 key="dropdown"
-                className="rounded shadow max-h-64 w-96 fixed z-100 bg-[#232323] overflow-y-auto mt-2"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                className="rounded shadow bg-[#232323] overflow-y-auto mt-2"
+                style={{ position: strategy, left: x ?? 0, top: y ?? 0 }}
                 tabIndex={-1}
+                role="listbox"
+                aria-label="Search results"
               >
-                {classes.map((c, index) => (
-                  <motion.li
-                    key={c.uuid}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    onMouseDown={async (e) => {
-                      e.preventDefault();
-                      await handleDropdownSelect(c.uuid);
-                      setDropdownOpen(false);
-                    }}
-                    onMouseEnter={() => setHighlightedIndex(index)}
-                    className={`p-2 text-sm text-[#fafafa] hover:cursor-pointer scroll-p-4 font-inter last:border-b-0 ${
-                      index === highlightedIndex
-                        ? "bg-[#181818]"
-                        : "hover:bg-[#181818]"
-                    }`}
-                  >
-                    <strong>
-                      {c.dept} {c.code}
-                    </strong>{" "}
-                    - {c.title}
-                  </motion.li>
-                ))}
-              </motion.ul>
+                <AnimatePresence mode="popLayout">
+                  {classes.map((c, index) => (
+                    <motion.li
+                      key={c.uuid}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      onMouseDown={async (e) => {
+                        e.preventDefault();
+                        await handleDropdownSelect(c.uuid);
+                        setDropdownOpen(false);
+                      }}
+                      onMouseEnter={() => setHighlightedIndex(index)}
+                      role="option"
+                      aria-selected={index === highlightedIndex}
+                      className={`p-2 text-sm text-[#fafafa] hover:cursor-pointer scroll-p-4 font-inter last:border-b-0 ${
+                        index === highlightedIndex
+                          ? "bg-[#181818]"
+                          : "hover:bg-[#181818]"
+                      }`}
+                    >
+                      <strong>
+                        {c.dept} {c.code}
+                      </strong>{" "}
+                      - {c.title}
+                    </motion.li>
+                  ))}
+                </AnimatePresence>
+              </ul>
             )}
-          </AnimatePresence>
+          </FloatingPortal>
         </div>
 
         <div className="w-full max-w-full mt-4">
