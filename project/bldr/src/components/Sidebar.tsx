@@ -261,7 +261,9 @@ export function Sidebar() {
                                 activeSemester === ""
                             )
                             .map((schedule: any, index: number) => (
-                              <li
+                              <motion.li
+                                initial={{ y: -20 }}
+                                animate={{ y: 0}}
                                 key={index}
                                 className={`text-sm text-[#fafafa] font-inter my-2  rounded-md transition-all duration-75 ${
                                   activeSchedule?.id === schedule.id
@@ -279,7 +281,7 @@ export function Sidebar() {
                                 >
                                   {schedule.name}
                                 </button>
-                              </li>
+                              </motion.li>
                             ))
                         )}
                       </ul>

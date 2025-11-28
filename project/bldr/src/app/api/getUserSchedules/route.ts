@@ -55,7 +55,8 @@ export async function GET(req: NextRequest) {
     const { data: schedules, error: schedulesError } = await supabase
       .from("allschedules")
       .select("scheduleid, schedulename, semester, year, createdat, lastedited")
-      .in("scheduleid", scheduleIds);
+      .in("scheduleid", scheduleIds)
+      .order("createdat", { ascending: false });
 
     if (schedulesError) {
       return Response.json(

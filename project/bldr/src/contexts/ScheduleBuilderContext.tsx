@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { useActiveSchedule } from "@/contexts/ActiveScheduleContext";
 import { timeToDecimal } from "@/lib/timeUtils";
 import { parseDays } from "@/lib/timeUtils";
 import { toast } from "sonner";
@@ -53,6 +54,36 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
     null
   );
 
+  // Try to read the active schedule from ActiveScheduleContext. If the
+  // provider isn't present higher in the tree, the hook will throw; we
+  // catch that and treat it as "no active schedule available" so this
+  // provider can still be used independently in tests or other places.
+  let activeSchedule: any = null;
+  try {
+    // Calling the hook unconditionally (inside try) preserves hook order
+    // while letting us handle the missing-provider case gracefully.
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    activeSchedule = useActiveSchedule().activeSchedule;
+  } catch (e) {
+    activeSchedule = null;
+  }
+
+  // When a schedule becomes active, copy its classes into the draft so the
+  // schedule builder immediately reflects the selected active schedule.
+  useEffect(() => {
+    if (!activeSchedule) return;
+
+    // Don't overwrite if we're already editing the same schedule
+    if (isEditingExisting && existingScheduleId === activeSchedule.id) return;
+
+    setDraftSchedule(activeSchedule.classes || []);
+    setDraftScheduleName(activeSchedule.name || "");
+    setDraftSemester(activeSchedule.semester || "");
+    setDraftYear(activeSchedule.year || "");
+    setIsEditingExisting(true);
+    setExistingScheduleId(activeSchedule.id || null);
+  }, [activeSchedule?.id]);
+
   // Helper functions
   const checkTimeConflict = (newClass: any, existingClasses: any[]) => {
     const newDays = parseDays(newClass.days);
@@ -86,7 +117,6 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
           console.log(
             `Checking conflict between ${newClass.dept} ${newClass.code} ${newClass.classID} and ${existing.dept} ${existing.code} ${existing.classID}`
           );
-          console.log(`Conflict detected I am existing.!!!!!!!!!!!`);
           // console.log(`newItem: ${newClass.dept} ${newClass.code} ${newClass.classID}`);
           // console.log(`existingItem: ${existing.dept} ${existing.code} ${existing.classID}`);
           return {
@@ -180,7 +210,6 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
             ? classItem
             : item
         );
-        console.log("draftSchedule:", next);
         return next;
       });
       return;
@@ -203,7 +232,6 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
     // Add new class section — compute next array so we can log the updated value
     setDraftSchedule((prev: any) => {
       const next = [...prev, classItem];
-      console.log("The draftSchedule:", next);
       return next;
     });
   };
@@ -211,7 +239,6 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
   const removeClassFromDraft = (index: number) => {
     setDraftSchedule((prev: any) => {
       const next = prev.filter((_: any, i: number) => i !== index);
-      console.log("The draftSchedule after removal:", next);
       return next;
     });
   };

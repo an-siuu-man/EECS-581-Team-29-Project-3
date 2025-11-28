@@ -85,7 +85,6 @@ export const ActiveScheduleProvider = ({
     if (schedule) {
       setActiveSchedule(schedule);
     }
-	
   };
 
   // Clear the active schedule
@@ -95,7 +94,9 @@ export const ActiveScheduleProvider = ({
 
   // Add a new schedule to the list
   const addScheduleToList = (schedule: Schedule) => {
-    setUserSchedules((prev) => [...prev, schedule]);
+    setUserSchedules((prev) => [schedule, ...prev]);
+    setActiveSchedule(schedule);
+    console.log("Added new schedule:", schedule);
   };
 
   // Update an existing schedule in the list
