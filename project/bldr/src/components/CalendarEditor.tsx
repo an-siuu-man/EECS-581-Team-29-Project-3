@@ -26,9 +26,9 @@ const CalendarEditor = () => {
         <AnimatePresence>
           {draftScheduleName || draftSchedule.length > 0 ? (
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="w-full h-full"
             >
               <table className="table-fixed h-full w-full border-collapse">
@@ -89,32 +89,50 @@ const CalendarEditor = () => {
 
                               // Generate a color based on dept
                               const colors = [
-                                "bg-yellow-300",
-                                "bg-blue-300",
-                                "bg-green-300",
-                                "bg-pink-300",
-                                "bg-purple-300",
-                                "bg-red-300",
+                                "#f5d2d2", // soft pink (original vibe)
+                                "#efd8c1", // peach
+                                "#efefc1", // pastel yellow
+                                "#d8efc1", // yellow-green
+                                "#c1efc1", // mint
+                                "#c1efd8", // aqua
+                                "#c1efef", // light cyan
+                                "#c1d8ef", // baby blue
+                                "#c1c1ef", // periwinkle
+                                "#d8c1ef", // lavender
+                                "#efc1ef", // light magenta
+                                "#efc1d8", // rose
                               ];
-                              const colorIndex =
-                                (cls.dept?.charCodeAt(0) || 0) % colors.length;
+
+                              const classcode = (
+                                `${cls.dept} ${cls.code}` || ""
+                              ).toUpperCase();
+                              let hash = 0;
+                              let i = 0;
+                              while (i < classcode.length) {
+                                hash = hash * 31 + classcode.charCodeAt(i);
+                                i++;
+                              }
+                              const colorIndex = Math.abs(hash) % colors.length;
 
                               return (
                                 <TooltipProvider key={idx}>
                                   <Tooltip delayDuration={200}>
                                     <TooltipTrigger asChild>
-                                      <div
-                                        className={`${colors[colorIndex]} absolute flex flex-col items-start justify-center left-0.5 right-0.5 p-1 rounded-md text-[#1a1a1a] shadow-md z-10 overflow-hidden cursor-pointer`}
+                                      <motion.div
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className={`absolute flex flex-col items-start justify-center left-0.5 right-0.5 p-1 rounded-md text-[#333333] shadow-md z-10 overflow-hidden`}
                                         style={{
                                           top: `${offset}px`,
                                           height: `${height}px`,
+                                          backgroundColor: colors[colorIndex],
                                         }}
                                       >
                                         <div className="font-bold text-xs font-dmsans truncate w-full">
                                           {cls.dept} {cls.code} ({cls.component}
                                           )
                                         </div>
-                                      </div>
+                                      </motion.div>
                                     </TooltipTrigger>
                                     <TooltipContent
                                       className="font-figtree"

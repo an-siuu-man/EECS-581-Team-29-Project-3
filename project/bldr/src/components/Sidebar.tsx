@@ -155,50 +155,6 @@ export function Sidebar() {
                 strokeLinejoin="round"
               ></path>
             </svg>
-
-            {open && (
-              <motion.div
-                className="cursor-pointer transition-all duration-300"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-              >
-                <TooltipProvider>
-                  <Tooltip delayDuration={300}>
-                    <TooltipTrigger asChild>
-                      <svg
-                        viewBox="0 0 24 24"
-                        height={34}
-                        width={34}
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="cursor-pointer hover:bg-[#404040] p-1 rounded-md transition duration-300"
-                      >
-                        <path
-                          d="M11.5 19C15.6421 19 19 15.6421 19 11.5C19 7.35786 15.6421 4 11.5 4C7.35786 4 4 7.35786 4 11.5C4 15.6421 7.35786 19 11.5 19Z"
-                          stroke="#fafafa"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                        <path
-                          d="M20.9999 20.9999L16.6499 16.6499"
-                          stroke="#fafafa"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </svg>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      className="text-xs font-figtree z-100 text-[#fafafa]"
-                      side="bottom"
-                    >
-                      <p>Search schedule</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </motion.div>
-            )}
           </div>
 
           {/* Main Sidebar Content */}
@@ -242,20 +198,47 @@ export function Sidebar() {
                         />
                         <Button
                           type="button"
-                          onClick={() => {
+                          onClick={async () => {
                             if (newScheduleName.trim()) {
-                              // TODO: Implement schedule creation API call
-                              // For now, just add to local list
-                              // handleScheduleClick(newScheduleName.trim());
-                              const newSchedule = {
-                                id: Date.now().toString(),
-                                name: newScheduleName.trim(),
-                                semester: activeSemester || "Fall 2025",
-                                year: 2025,
-                                classes: [],
-                              };
-                              addScheduleToList(newSchedule);
-                              setNewScheduleName("");
+                              try {
+                                const response = await fetch(
+                                  "/api/createSchedule",
+                                  {
+                                    method: "POST",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                      scheduleName: newScheduleName.trim(),
+                                      semester: activeSemester || "Fall",
+                                      year: 2025,
+                                    }),
+                                  }
+                                );
+
+                                if (!response.ok) {
+                                  throw new Error("Failed to create schedule");
+                                }
+
+                                const data = await response.json();
+
+                                // Add the new schedule to the local list
+                                const newSchedule = {
+                                  id: data.schedule.scheduleid,
+                                  name: data.schedule.schedulename,
+                                  semester: data.schedule.semester,
+                                  year: data.schedule.year,
+                                  classes: [],
+                                };
+                                addScheduleToList(newSchedule);
+                                setNewScheduleName("");
+                              } catch (error) {
+                                console.error(
+                                  "Error creating schedule:",
+                                  error
+                                );
+                                // You might want to show an error message to the user here
+                              }
                             }
                           }}
                           className="bg-[#fafafa] text-xs text-[#1a1a1a] hover:bg-[#404040] hover:text-[#fafafa] cursor-pointer font-dmsans text-md"
@@ -265,7 +248,7 @@ export function Sidebar() {
                       </div>
 
                       {/* Schedule list */}
-                      <ul className="list-none pl-2">
+                      <ul className="list-none">
                         {userSchedules.length === 0 ? (
                           <p className="text-sm text-gray-400">
                             No schedules found.
@@ -278,16 +261,18 @@ export function Sidebar() {
                                 activeSemester === ""
                             )
                             .map((schedule: any, index: number) => (
-                              <li
+                              <motion.li
+                                initial={{ y: -20 }}
+                                animate={{ y: 0}}
                                 key={index}
-                                className={`text-sm text-[#fafafa] font-inter my-2 hover:bg-[#333] rounded-md transition duration-75 ${
+                                className={`text-sm text-[#fafafa] font-inter my-2  rounded-md transition-all duration-75 ${
                                   activeSchedule?.id === schedule.id
-                                    ? "bg-[#333]"
-                                    : ""
+                                    ? "bg-[#555] font-bold"
+                                    : "hover:bg-[#333]"
                                 }`}
                               >
                                 <button
-                                  className="p-2 cursor-pointer w-full text-left"
+                                  className="py-2 px-3 cursor-pointer w-full text-left"
                                   onClick={() => {
                                     loadSchedule(schedule.id);
                                     setActiveSemester(schedule.semester);
@@ -296,7 +281,7 @@ export function Sidebar() {
                                 >
                                   {schedule.name}
                                 </button>
-                              </li>
+                              </motion.li>
                             ))
                         )}
                       </ul>

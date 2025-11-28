@@ -32,21 +32,6 @@ export default function Class(props: ClassProps) {
       props.onSectionClick(section, classData);
     }
   };
-  // const handleClick = (classcode, classname, dept, credithours, catalogyr, major) => {
-  //     const isAlreadyPresent = selectedClasses.some((cls) => cls.classcode === classcode && cls.classname === classname);
-  //     const selected = isAlreadyPresent;
-
-  //     if (selected) {
-  //         setSelectedClasses((prevClasses) =>
-  //             prevClasses.filter((item) => item.classcode !== classcode || item.classname !== classname)
-  //         );
-  //     } else {
-  //         setSelectedClasses((prevClasses) => [
-  //             ...prevClasses,
-  //             { classcode, classname, dept, credithours, catalogyr, major },
-  //         ]);
-  //     }
-  // }
 
   const callAPI = async (dept: string, code: string) => {
     const r = await fetch(`/api/getClassInfo`, {
@@ -72,13 +57,17 @@ export default function Class(props: ClassProps) {
     <AnimatePresence>
       {classInfo && classInfo.data.length > 0 ? (
         <motion.div
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1, transition: { delay: 0.3 } }}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            transition: { delay: 0.3 },
+          }}
           exit={{ scale: 0.6, opacity: 0 }}
           key={props.uuid}
           className="flex flex-col p-2 mt-2 mb-6 rounded-md text-[#fafafa] border-2 max-w-[420px] border-[#404040] shadow-md justify-start items-center"
         >
-          <h1 className="font-dmsans text-lg font-bold self-start mb-1">
+          <h1 className="font-dmsans text-lg font-bold self-start">
             {classInfo.data[0].dept} {classInfo.data[0].code}:{" "}
             {classInfo.data[0].title}
           </h1>
@@ -91,13 +80,13 @@ export default function Class(props: ClassProps) {
               key={section.uuid}
               onClick={() => handleSectionClick(section, classInfo.data[0])}
               className={
-                `w-full font-inter rounded-md mt-2 bg-[#181818] transition duration-100 px-3 py-2 text-left` +
+                `w-full font-inter rounded-md mt-2 bg-[#181818] transition duration-100 px-3  text-left` +
                 ((section.seats_available ?? 0) > 0
                   ? " cursor-pointer hover:bg-[#232323]"
                   : " cursor-default opacity-60")
               }
             >
-              <div className="flex flex-row w-full justify-between gap-4 items-start mb-1">
+              <div className="flex flex-row w-full justify-between gap-4 items-start my-1">
                 <div className="flex flex-row gap-4 items-start">
                   <div className="flex flex-col">
                     <span className="font-semibold">#{section.classID}</span>
@@ -112,16 +101,20 @@ export default function Class(props: ClassProps) {
                         ? `${section.starttime} - ${section.endtime}`
                         : section.starttime || section.endtime || ""}
                     </span>
-                    {section.instructor && (
+                    {section.instructor ? (
                       <span className="text-xs text-[#a8a8a8]">
                         {section.instructor}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[#a8a8a8]">
+                        Instructor TBA
                       </span>
                     )}
                   </div>
                 </div>
                 <span
                   className={`text-sm font-semibold justify-self-end ${
-                    (section.seats_available ?? 0) === 0
+                    (section.seats_available ?? 0) <= 0
                       ? "text-gray-500"
                       : (section.seats_available ?? 0) <= 3
                       ? "text-red-400"

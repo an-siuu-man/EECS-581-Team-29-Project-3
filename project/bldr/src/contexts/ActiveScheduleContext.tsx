@@ -43,7 +43,7 @@ export const ActiveScheduleProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const { user } = useAuth();
+  const { user, session, loading } = useAuth();
   // Helper to sync state with localStorage
   const usePersistedState = <T,>(key: string, initialValue: T) => {
     const [state, setState] = useState<T>(() => {
@@ -94,7 +94,9 @@ export const ActiveScheduleProvider = ({
 
   // Add a new schedule to the list
   const addScheduleToList = (schedule: Schedule) => {
-    setUserSchedules((prev) => [...prev, schedule]);
+    setUserSchedules((prev) => [schedule, ...prev]);
+    setActiveSchedule(schedule);
+    console.log("Added new schedule:", schedule);
   };
 
   // Update an existing schedule in the list
@@ -124,18 +126,18 @@ export const ActiveScheduleProvider = ({
 
   // Fetch user schedules from database using Supabase user ID
   const fetchUserSchedules = async () => {
-    if (!user?.id) {
-      console.log("No user logged in");
+    if (!user?.id || !session?.access_token) {
+      console.log("No user logged in or no access token");
       return;
     }
 
     try {
-      console.log("Fetching schedules for user:", user.id);
-
       const response = await fetch("/api/getUserSchedules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (!response.ok) {
@@ -143,6 +145,7 @@ export const ActiveScheduleProvider = ({
       }
 
       const data = await response.json();
+      console.log("Fetched user schedules:", data.schedules);
       setUserSchedules(data.schedules || []);
     } catch (error) {
       console.error("Error fetching user schedules:", error);
@@ -150,15 +153,19 @@ export const ActiveScheduleProvider = ({
     }
   };
 
-  // Fetch schedules when user changes
+  // Fetch schedules when user changes. Respect auth `loading` so we don't
+  // clear persisted state while the auth library is still initializing
+  // (this prevents wiping `activeSchedule` on page refresh).
   useEffect(() => {
+    if (loading) return; // wait until auth has finished initializing
+
     if (user?.id) {
       fetchUserSchedules();
     } else {
       setUserSchedules([]);
       setActiveSchedule(null);
     }
-  }, [user?.id]);
+  }, [user?.id, loading]);
 
   return (
     <ActiveScheduleContext.Provider

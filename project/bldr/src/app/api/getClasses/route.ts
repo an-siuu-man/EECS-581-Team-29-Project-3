@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from "../../lib/supabaseClient";
 
 export async function POST(req: Request) {
   try {
@@ -6,53 +6,64 @@ export async function POST(req: Request) {
     const { scheduleid } = body;
 
     if (!scheduleid) {
-      return Response.json({ error: 'Missing scheduleid' }, { status: 400 });
+      return Response.json({ error: "Missing scheduleid" }, { status: 400 });
     }
 
-    // 1. Select classid and uuid from userschedule where scheduleid = scheduleid
+    // 1. Select class_uuid from schedule_classes where scheduleid = scheduleid
     const { data: userSchedule, error: userScheduleErr } = await supabase
-      .from('scheduleclasses')
-      .select('classid, uuid')
-      .eq('scheduleid', scheduleid);
+      .from("schedule_classes")
+      .select("class_uuid")
+      .eq("scheduleid", scheduleid);
 
     if (userScheduleErr || !userSchedule || userSchedule.length === 0) {
-      return Response.json({ error: 'No classes found for this scheduleid' }, { status: 404 });
+      return Response.json(
+        { error: "No classes found for this scheduleid" },
+        { status: 404 }
+      );
     }
 
-    // 2. Using those classid, get dept and code from allclasses
-    const classIds = userSchedule.map(item => item.classid);
+    // 2. Using those class_uuid values, get dept, code, classid, and uuid from allclasses
+    const classUuids = userSchedule.map((item) => item.class_uuid);
     const { data: classInfo, error: classInfoErr } = await supabase
-      .from('allclasses')
-      .select('classid, dept, code')
-      .in('classid', classIds);
+      .from("allclasses")
+      .select("uuid, classid, dept, code")
+      .in("uuid", classUuids);
 
     if (classInfoErr || !classInfo) {
-      return Response.json({ error: 'Class info fetch failed' }, { status: 500 });
+      return Response.json(
+        { error: "Class info fetch failed" },
+        { status: 500 }
+      );
     }
 
     // 3. Build output: group by dept+code, collect selClass array
-    const deptCodeMap: { [key: string]: { classid: string; uuid: string }[] } = {};
+    const deptCodeMap: { [key: string]: { classid: string; uuid: string }[] } =
+      {};
 
-    for (const { classid, uuid } of userSchedule) {
-      const classRow = classInfo.find(ci => ci.classid === classid);
+    for (const { class_uuid } of userSchedule) {
+      const classRow = classInfo.find((ci) => ci.uuid === class_uuid);
       if (!classRow) continue;
       const deptcode = `${classRow.dept} ${classRow.code}`;
 
       if (!deptCodeMap[deptcode]) deptCodeMap[deptcode] = [];
-      deptCodeMap[deptcode].push({ classid, uuid });
+      deptCodeMap[deptcode].push({
+        classid: classRow.classid?.toString() || "",
+        uuid: classRow.uuid,
+      });
     }
 
     // 4. Format output as requested
     const output = Object.entries(deptCodeMap).map(([deptcode, selClass]) => ({
       deptcode,
-      selClass
+      selClass,
     }));
-    console.log('Output:', JSON.stringify(output, null, 2));
+    console.log("Output:", JSON.stringify(output, null, 2));
     return Response.json(output, { status: 200 });
   } catch (err: any) {
-    console.error('Server error:', err);
-    return Response.json({ error: 'Server error', details: err.message }, { status: 500 });
+    console.error("Server error:", err);
+    return Response.json(
+      { error: "Server error", details: err.message },
+      { status: 500 }
+    );
   }
 }
-
-

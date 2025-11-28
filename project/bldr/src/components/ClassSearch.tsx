@@ -20,7 +20,6 @@ import { SearchedClass } from "@/types";
 import { Trash2, Search } from "lucide-react";
 // import { useAuth } from "@/context/AuthContext";
 import Class from "./Class";
-import NewClass from "@/components/NewClass";
 import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
 export default function ClassSearch() {
   // Get schedule builder context
@@ -316,7 +315,7 @@ export default function ClassSearch() {
                       (classGroup: any) => (
                         <div
                           key={`${classGroup.dept}-${classGroup.code}`}
-                          className="bg-[#181818] rounded-lg p-3 mb-2 border border-[#303030]"
+                          className="bg-[#181818] rounded-md p-3 mb-2 border-2 border-[#303030]"
                         >
                           <div className="font-bold text-white mb-4">
                             {classGroup.dept} {classGroup.code}:{" "}
@@ -326,7 +325,7 @@ export default function ClassSearch() {
                             {classGroup.sections.map((section: any) => (
                               <div
                                 key={section.originalIndex}
-                                className="relative group bg-[#101010] rounded p-2 border border-[#404040]"
+                                className="relative group rounded-md bg-[#101010] p-2 border border-[#404040]"
                               >
                                 <div className="flex flex-col gap-1">
                                   <div className="text-sm font-semibold text-purple-400">
