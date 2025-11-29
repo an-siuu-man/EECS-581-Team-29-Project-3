@@ -25,6 +25,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
 
   useEffect(() => {
+    const clearPersistedStateForUser = () => {
+      if (typeof window === "undefined") return;
+      const keysToClear = [
+        // ActiveScheduleContext persisted keys
+        "activeSchedule",
+        "activeSemester",
+        "userSchedules",
+        // ScheduleBuilderContext persisted keys
+        "draftSchedule",
+        "draftScheduleName",
+        "draftSemester",
+        "draftYear",
+        "isEditingExisting",
+        "existingScheduleId",
+      ];
+      try {
+        keysToClear.forEach((k) => localStorage.removeItem(k));
+      } catch (e) {
+        // ignore storage errors
+      }
+    };
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -35,7 +57,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Clear persisted state when a fresh sign-in occurs so a new user
+      // doesn't see another user's persisted drafts or selections.
+      if (event === "SIGNED_IN") {
+        clearPersistedStateForUser();
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -46,6 +74,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    if (typeof window !== "undefined") {
+      try {
+        // Clear persisted state when signing out to avoid leaking data
+        localStorage.removeItem("activeSchedule");
+        localStorage.removeItem("activeSemester");
+        localStorage.removeItem("userSchedules");
+        localStorage.removeItem("draftSchedule");
+        localStorage.removeItem("draftScheduleName");
+        localStorage.removeItem("draftSemester");
+        localStorage.removeItem("draftYear");
+        localStorage.removeItem("isEditingExisting");
+        localStorage.removeItem("existingScheduleId");
+      } catch (e) {
+        // ignore
+      }
+    }
+
     setUser(null);
     setSession(null);
   };

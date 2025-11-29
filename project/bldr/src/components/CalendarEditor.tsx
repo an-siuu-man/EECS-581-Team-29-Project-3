@@ -24,7 +24,7 @@ const CalendarEditor = () => {
     >
       <div className="w-full h-full overflow-hidden">
         <AnimatePresence>
-          {draftScheduleName || draftSchedule.length > 0 ? (
+          {draftScheduleName && draftSchedule.length > 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -157,6 +157,15 @@ const CalendarEditor = () => {
                   ))}
                 </tbody>
               </table>
+            </motion.div>
+          ) : draftScheduleName !== null && draftSchedule.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="font-inter flex items-center justify-center w-full h-full  m-2 text-center text-xs md:text-sm"
+            >
+              Add a class to see it here!
             </motion.div>
           ) : (
             <div className="font-inter m-2 text-center text-xs md:text-sm">

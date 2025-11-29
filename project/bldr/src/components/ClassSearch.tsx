@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useFloating, offset, flip, shift, size, autoUpdate, FloatingPortal } from "@floating-ui/react";
+import {
+  useFloating,
+  offset,
+  flip,
+  shift,
+  size,
+  autoUpdate,
+  FloatingPortal,
+} from "@floating-ui/react";
 import { Input } from "./ui/input";
 import {
   Accordion,
@@ -33,7 +41,9 @@ export default function ClassSearch() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const [dropdownPosStyle, setDropdownPosStyle] = useState<React.CSSProperties | undefined>(undefined);
+  const [dropdownPosStyle, setDropdownPosStyle] = useState<
+    React.CSSProperties | undefined
+  >(undefined);
 
   // Floating UI setup
   const { x, y, strategy, refs, update, middlewareData } = useFloating({
@@ -56,7 +66,6 @@ export default function ClassSearch() {
     ],
     whileElementsMounted: autoUpdate,
   });
-  
 
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -88,8 +97,6 @@ export default function ClassSearch() {
     // update floating position when dropdown opens or class list changes
     if (dropdownOpen) update?.();
   }, [dropdownOpen, classes.length, update]);
-
-  
 
   function handleDropdownSelect(uuid: string) {
     const isAlreadyPresent = selectedClasses.some((cls) => cls.uuid === uuid);

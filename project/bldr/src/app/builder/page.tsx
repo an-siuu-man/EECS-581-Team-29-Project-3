@@ -2,19 +2,33 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
+import { useActiveSchedule } from "@/contexts/ActiveScheduleContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LogOut, AlertCircle, Trash2, X, Check, Save } from "lucide-react";
 import ClassSearch from "@/components/ClassSearch";
 import { Sidebar } from "@/components/Sidebar";
 import CalendarEditor from "@/components/CalendarEditor";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function Builder() {
-  const { user, loading, signOut } = useAuth();
-  const { clearDraft, draftSchedule } = useScheduleBuilder();
+  const { user, session, loading, signOut } = useAuth();
+  const {
+    clearDraft,
+    draftSchedule,
+    draftScheduleName,
+    draftSemester,
+    draftYear,
+    existingScheduleId,
+    setIsEditingExisting,
+    setExistingScheduleId,
+  } = useScheduleBuilder();
+  const { addScheduleToList, updateScheduleInList, fetchUserSchedules } =
+    useActiveSchedule();
   const router = useRouter();
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -47,6 +61,126 @@ export default function Builder() {
         duration: 3000,
         icon: <AlertCircle className="h-5 w-5" />,
       });
+    }
+  };
+
+  const handleSaveSchedule = async () => {
+    if (!session?.access_token) {
+      toast.error("You must be logged in to save schedules", {
+        style: {
+          fontFamily: "Inter",
+          backgroundColor: "#404040",
+          color: "#fff",
+        },
+        duration: 3000,
+        icon: <AlertCircle className="h-5 w-5" />,
+      });
+      return;
+    }
+
+    if (!draftScheduleName || !draftSemester || !draftYear) {
+      toast.error("Please fill in schedule name, semester, and year", {
+        style: {
+          fontFamily: "Inter",
+          backgroundColor: "#404040",
+          color: "#fff",
+        },
+        duration: 3000,
+        icon: <AlertCircle className="h-5 w-5" />,
+      });
+      return;
+    }
+
+    if (draftSchedule.length === 0) {
+      toast.error("Cannot save an empty schedule", {
+        style: {
+          fontFamily: "Inter",
+          backgroundColor: "#404040",
+          color: "#fff",
+        },
+        duration: 3000,
+        icon: <AlertCircle className="h-5 w-5" />,
+      });
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const response = await fetch("/api/saveSchedule", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          scheduleId: existingScheduleId,
+          name: draftScheduleName,
+          semester: draftSemester,
+          year: draftYear,
+          classes: draftSchedule,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save schedule");
+      }
+
+      // Update context with saved schedule
+      const savedSchedule = {
+        id: data.scheduleId,
+        name: draftScheduleName,
+        semester: draftSemester,
+        year: draftYear,
+        classes: draftSchedule,
+        isActive: true,
+      };
+
+      if (existingScheduleId) {
+        // Update existing schedule
+        updateScheduleInList(existingScheduleId, savedSchedule);
+        toast.success("Schedule updated successfully!", {
+          style: {
+            fontFamily: "Inter",
+            backgroundColor: "#404040",
+            color: "#fff",
+          },
+          duration: 3000,
+          icon: <Check className="h-5 w-5 text-green-500" />,
+        });
+      } else {
+        // Add new schedule
+        addScheduleToList(savedSchedule);
+        setIsEditingExisting(true);
+        setExistingScheduleId(data.scheduleId);
+        toast.success("Schedule saved successfully!", {
+          style: {
+            fontFamily: "Inter",
+            backgroundColor: "#404040",
+            color: "#fff",
+          },
+          duration: 3000,
+          icon: <Check className="h-5 w-5 text-green-500" />,
+        });
+      }
+
+      // Refresh the schedule list
+      await fetchUserSchedules();
+    } catch (error: any) {
+      console.error("Save schedule error:", error);
+      toast.error(error.message || "Failed to save schedule", {
+        style: {
+          fontFamily: "Inter",
+          backgroundColor: "#404040",
+          color: "#fff",
+        },
+        duration: 3000,
+        icon: <AlertCircle className="h-5 w-5" />,
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -161,11 +295,22 @@ export default function Builder() {
               <CalendarEditor />
               <div className="flex gap-2">
                 <Button
+                  onClick={handleSaveSchedule}
                   className="font-dmsans cursor-pointer w- max-w-[600px]"
-                  disabled={draftSchedule.length === 0}
+                  disabled={draftSchedule.length === 0 || isSaving}
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Schedule
+                  {isSaving ? (
+                    <>
+                      <Spinner />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      {" "}
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Schedule
+                    </>
+                  )}
                 </Button>
                 <Button
                   onClick={handleClearSchedule}
