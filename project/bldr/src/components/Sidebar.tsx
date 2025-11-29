@@ -20,8 +20,20 @@ import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveSchedule } from "@/contexts/ActiveScheduleContext";
+import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
 import { toast } from "sonner";
-import { Sidebar as SidebarIcon, Trash2, AlertCircle } from "lucide-react";
+import {
+  Sidebar as SidebarIcon,
+  Trash2,
+  AlertCircle,
+  MoreHorizontal,
+  Edit2,
+  Check,
+  X,
+} from "lucide-react";
+import toastStyle from "@/components/ui/toastStyle";
+import { set } from "date-fns";
+import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
 
 export function Sidebar() {
   const { user, session } = useAuth();
@@ -33,19 +45,98 @@ export function Sidebar() {
     userSchedules,
     loadSchedule,
     addScheduleToList,
+    updateScheduleInList,
     removeScheduleFromList,
   } = useActiveSchedule();
 
+  const { clearDraft, draftSchedule, draftScheduleName } = useScheduleBuilder();
   const [open, setOpen] = useState(true);
   const [newScheduleName, setNewScheduleName] = useState("");
+  const [hoveredScheduleId, setHoveredScheduleId] = useState<string | null>(
+    null
+  );
+  const [renamingScheduleId, setRenamingScheduleId] = useState<string | null>(
+    null
+  );
+  const [renameValue, setRenameValue] = useState("");
 
   const toggleSidebar = () => {
     setOpen(!open);
   };
 
+  const handleRenameSchedule = async (scheduleId: string, newName: string) => {
+    if (!newName.trim()) {
+      toast.error("Schedule name cannot be empty", {
+        style: toastStyle,
+        duration: 2000,
+        icon: <AlertCircle className="h-5 w-5 text-red-500" />,
+      });
+      return;
+    }
+
+    if (!session?.access_token) {
+      toast.error("You must be logged in to rename schedules", {
+        style: toastStyle,
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/renameSchedule", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ scheduleId, newName: newName.trim() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to rename schedule");
+      }
+
+      // Update the local schedule list with the new name
+      const scheduleToUpdate = userSchedules.find(
+        (s: any) => s.id === scheduleId
+      );
+      if (scheduleToUpdate) {
+        updateScheduleInList(scheduleId, {
+          ...scheduleToUpdate,
+          name: newName.trim(),
+        });
+      }
+
+      toast.success("Schedule renamed successfully", {
+        style: toastStyle,
+        duration: 2000,
+      });
+    } catch (err: any) {
+      console.error("Error renaming schedule:", err);
+      toast.error(err?.message || "Failed to rename schedule", {
+        style: toastStyle,
+      });
+    } finally {
+      setRenamingScheduleId(null);
+      setRenameValue("");
+    }
+  };
+
+  const startRenaming = (schedule: any) => {
+    setRenamingScheduleId(schedule.id);
+    setRenameValue(schedule.name);
+  };
+
+  const cancelRenaming = () => {
+    setRenamingScheduleId(null);
+    setRenameValue("");
+  };
+
   const handleDeleteSchedule = async (scheduleId: string) => {
     if (!session?.access_token) {
-      toast.error("You must be logged in to delete schedules");
+      toast.error("You must be logged in to delete schedules", {
+        style: toastStyle,
+      });
       return;
     }
 
@@ -68,11 +159,18 @@ export function Sidebar() {
 
         // Remove from local context
         removeScheduleFromList(scheduleId);
-
-        toast.success("Schedule deleted", { duration: 2000 });
+        setActiveSchedule(null);
+        setActiveSemester("");
+        clearDraft();
+        toast.success("Schedule deleted", {
+          duration: 2000,
+          style: toastStyle,
+        });
       } catch (err: any) {
         console.error("Error deleting schedule:", err);
-        toast.error(err?.message || "Failed to delete schedule");
+        toast.error(err?.message || "Failed to delete schedule", {
+          style: toastStyle,
+        });
       }
     };
 
@@ -104,11 +202,6 @@ export function Sidebar() {
         </div>
       </div>,
       {
-        style: {
-          fontFamily: "Inter",
-          backgroundColor: "#404040",
-          color: "#fff",
-        },
         duration: Infinity,
         icon: <AlertCircle className="h-5 w-5 text-yellow-500" />,
       }
@@ -182,7 +275,7 @@ export function Sidebar() {
                           className="font-inter border-[#404040] border placeholder:text-xs selection:bg-blue-400 text-xs"
                         />
                         <Button
-                          type="button"
+                          type="submit"
                           onClick={async () => {
                             if (newScheduleName.trim()) {
                               try {
@@ -224,6 +317,14 @@ export function Sidebar() {
                                 );
                                 // You might want to show an error message to the user here
                               }
+                            } else {
+                              toast(<div>Schedule name cannot be empty</div>, {
+                                style: toastStyle,
+                                duration: 2000,
+                                icon: (
+                                  <AlertCircle className="h-5 w-5 text-red-500" />
+                                ),
+                              });
                             }
                           }}
                           className="bg-[#fafafa] text-xs text-[#1a1a1a] hover:bg-[#404040] hover:text-[#fafafa] cursor-pointer font-dmsans text-md"
@@ -233,7 +334,7 @@ export function Sidebar() {
                       </div>
 
                       {/* Schedule list */}
-                      <ul className="list-none overflow-scroll max-h-[300px] shadow-inner">
+                      <ul className="list-none overflow-y-scroll overflow-x-hidden scrollbar-hidden max-h-[300px] shadow-inner">
                         {userSchedules.length === 0 ? (
                           <p className="text-sm text-gray-400">
                             No schedules found.
@@ -248,45 +349,102 @@ export function Sidebar() {
                             .map((schedule: any) => (
                               <li
                                 key={schedule.id}
+                                onMouseEnter={() =>
+                                  setHoveredScheduleId(schedule.id)
+                                }
+                                onMouseLeave={() => setHoveredScheduleId(null)}
                                 className={`flex justify-between items-center text-sm text-[#fafafa] font-inter my-2 rounded-md transition-all duration-75 ${
                                   activeSchedule?.id === schedule.id
                                     ? "bg-[#555] font-bold"
                                     : "hover:bg-[#333]"
                                 }`}
                               >
-                                <button
-                                  className="py-2 px-3 cursor-pointer w-full text-left"
-                                  onClick={() => {
-                                    loadSchedule(schedule.id);
-                                    setActiveSemester(schedule.semester);
-                                    console.log(activeSchedule);
-                                  }}
-                                >
-                                  {schedule.name}
-                                </button>
-                                {activeSchedule?.id === schedule.id && (
-                                  <button className="relative z-50 cursor-pointer">
-                                    <TooltipProvider key={schedule.id}>
-                                      <Tooltip delayDuration={300}>
-                                        <TooltipTrigger asChild>
-                                          <span
-                                            onClick={() =>
-                                              handleDeleteSchedule(schedule.id)
-                                            }
-                                          >
-                                            <Trash2 className="h-6 w-6 rounded-full p-1 hover:bg-gray-700 transition text-red-500 mr-2" />
-                                          </span>
-                                        </TooltipTrigger>
-                                        <TooltipContent
-                                          side="top"
-                                          sideOffset={-3}
-                                          className="font-inter"
-                                        >
-                                          Delete Schedule
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </button>
+                                {renamingScheduleId === schedule.id ? (
+                                  <div className="flex items-center gap-2 w-full px-2 py-1">
+                                    <Input
+                                      type="text"
+                                      value={renameValue}
+                                      onChange={(e) =>
+                                        setRenameValue(e.target.value)
+                                      }
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          handleRenameSchedule(
+                                            schedule.id,
+                                            renameValue
+                                          );
+                                        } else if (e.key === "Escape") {
+                                          cancelRenaming();
+                                        }
+                                      }}
+                                      autoFocus
+                                      className="h-7 text-xs border-[#404040] bg-[#2a2a2a] flex-1"
+                                    />
+                                    <button
+                                      onClick={() =>
+                                        handleRenameSchedule(
+                                          schedule.id,
+                                          renameValue
+                                        )
+                                      }
+                                      className="p-1 hover:bg-[#444] rounded transition cursor-pointer"
+                                    >
+                                      <Check className="h-4 w-4 text-green-500" />
+                                    </button>
+                                    <button
+                                      onClick={cancelRenaming}
+                                      className="p-1 hover:bg-[#444] rounded transition cursor-pointer"
+                                    >
+                                      <X className="h-4 w-4 text-red-500" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <button
+                                      className="py-2 px-3 cursor-pointer w-full text-left"
+                                      onClick={() => {
+                                        loadSchedule(schedule.id);
+                                        setActiveSemester(schedule.semester);
+                                        console.log(activeSchedule);
+                                      }}
+                                    >
+                                      {schedule.name}
+                                    </button>
+                                    {hoveredScheduleId === schedule.id && (
+                                      <Popover>
+                                        <PopoverTrigger asChild>
+                                          <button className="flex items-center z-50 cursor-pointer">
+                                            <MoreHorizontal className="h-4 w-4 mr-2" />
+                                          </button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="bg-[#2a2a2a] border rounded-md border-[#404040] p-2 w-fit">
+                                          <div className="flex flex-col items-start justify-between gap-1 text-sm">
+                                            <span
+                                              className="p-2 rounded-md w-full flex flex-row items-center justify-start gap-2 font-inter cursor-pointer hover:bg-[#444] transition"
+                                              onClick={() =>
+                                                startRenaming(schedule)
+                                              }
+                                            >
+                                              <Edit2 className="h-4 w-4" />
+                                              Rename
+                                            </span>
+                                            <hr className="w-full border-t border-[#606060]" />
+                                            <span
+                                              className="p-2 rounded-md w-full flex flex-row items-center justify-start gap-2 font-inter cursor-pointer hover:bg-[#444] transition text-red-500"
+                                              onClick={() =>
+                                                handleDeleteSchedule(
+                                                  schedule.id
+                                                )
+                                              }
+                                            >
+                                              <Trash2 className="h-4 w-4 " />
+                                              Delete
+                                            </span>
+                                          </div>
+                                        </PopoverContent>
+                                      </Popover>
+                                    )}
+                                  </>
                                 )}
                               </li>
                             ))

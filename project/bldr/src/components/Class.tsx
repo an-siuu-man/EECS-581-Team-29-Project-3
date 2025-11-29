@@ -16,7 +16,10 @@ export default function Class(props: ClassProps) {
   const [selectedClasses, setSelectedClasses] = useState<any>({});
   const [classInfo, setClassInfo] = useState<ClassInfoResponse>({ data: [] });
 
-  const handleSectionClick = (section: ClassSection, classData: ClassData) => {
+  const handleSectionClick = async (
+    section: ClassSection,
+    classData: ClassData
+  ) => {
     // Convert section to ClassSection format for calendar
     const classToAdd: ClassSection = {
       ...section,
@@ -25,7 +28,7 @@ export default function Class(props: ClassProps) {
       title: classData.title,
     };
 
-    addClassToDraft(classToAdd);
+    await addClassToDraft(classToAdd);
 
     // Call parent handler if provided
     if (props.onSectionClick) {

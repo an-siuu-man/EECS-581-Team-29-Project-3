@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LogOut, AlertCircle, Trash2, X, Check, Save } from "lucide-react";
+import toastStyle from "@/components/ui/toastStyle";
 import ClassSearch from "@/components/ClassSearch";
 import { Sidebar } from "@/components/Sidebar";
 import CalendarEditor from "@/components/CalendarEditor";
@@ -40,11 +41,7 @@ export default function Builder() {
     try {
       await signOut();
       toast.success("Logged out successfully", {
-        style: {
-          fontFamily: "Inter",
-          backgroundColor: "#404040",
-          color: "#fff",
-        },
+        style: { ...toastStyle },
         duration: 2000,
         icon: <LogOut className="h-5 w-5" />,
       });
@@ -53,11 +50,7 @@ export default function Builder() {
     } catch (error) {
       console.error("Logout error:", error);
       toast.error("Failed to logout", {
-        style: {
-          fontFamily: "Inter",
-          backgroundColor: "#404040",
-          color: "#fff",
-        },
+        style: { ...toastStyle },
         duration: 3000,
         icon: <AlertCircle className="h-5 w-5" />,
       });
@@ -67,11 +60,7 @@ export default function Builder() {
   const handleSaveSchedule = async () => {
     if (!session?.access_token) {
       toast.error("You must be logged in to save schedules", {
-        style: {
-          fontFamily: "Inter",
-          backgroundColor: "#404040",
-          color: "#fff",
-        },
+        style: { ...toastStyle },
         duration: 3000,
         icon: <AlertCircle className="h-5 w-5" />,
       });
@@ -80,11 +69,7 @@ export default function Builder() {
 
     if (!draftScheduleName || !draftSemester || !draftYear) {
       toast.error("Please fill in schedule name, semester, and year", {
-        style: {
-          fontFamily: "Inter",
-          backgroundColor: "#404040",
-          color: "#fff",
-        },
+        style: { ...toastStyle },
         duration: 3000,
         icon: <AlertCircle className="h-5 w-5" />,
       });
@@ -93,11 +78,7 @@ export default function Builder() {
 
     if (draftSchedule.length === 0) {
       toast.error("Cannot save an empty schedule", {
-        style: {
-          fontFamily: "Inter",
-          backgroundColor: "#404040",
-          color: "#fff",
-        },
+        style: { ...toastStyle },
         duration: 3000,
         icon: <AlertCircle className="h-5 w-5" />,
       });
@@ -142,11 +123,7 @@ export default function Builder() {
         // Update existing schedule
         updateScheduleInList(existingScheduleId, savedSchedule);
         toast.success("Schedule updated successfully!", {
-          style: {
-            fontFamily: "Inter",
-            backgroundColor: "#404040",
-            color: "#fff",
-          },
+          style: { ...toastStyle },
           duration: 3000,
           icon: <Check className="h-5 w-5 text-green-500" />,
         });
@@ -156,11 +133,7 @@ export default function Builder() {
         setIsEditingExisting(true);
         setExistingScheduleId(data.scheduleId);
         toast.success("Schedule saved successfully!", {
-          style: {
-            fontFamily: "Inter",
-            backgroundColor: "#404040",
-            color: "#fff",
-          },
+          style: { ...toastStyle },
           duration: 3000,
           icon: <Check className="h-5 w-5 text-green-500" />,
         });
@@ -171,11 +144,7 @@ export default function Builder() {
     } catch (error: any) {
       console.error("Save schedule error:", error);
       toast.error(error.message || "Failed to save schedule", {
-        style: {
-          fontFamily: "Inter",
-          backgroundColor: "#404040",
-          color: "#fff",
-        },
+        style: { ...toastStyle },
         duration: 3000,
         icon: <AlertCircle className="h-5 w-5" />,
       });
@@ -198,11 +167,7 @@ export default function Builder() {
               clearDraft();
               toast.dismiss();
               toast.success("Schedule cleared", {
-                style: {
-                  fontFamily: "Inter",
-                  backgroundColor: "#404040",
-                  color: "#fff",
-                },
+                style: { ...toastStyle },
                 duration: 2000,
                 icon: <Trash2 className="h-5 w-5" />,
               });
@@ -224,12 +189,8 @@ export default function Builder() {
         </div>
       </div>,
       {
-        style: {
-          fontFamily: "Inter",
-          backgroundColor: "#404040",
-          color: "#fff",
-        },
-        duration: Infinity, // Don't auto-dismiss
+        style: { ...toastStyle },
+        duration: Infinity,
         icon: <AlertCircle className="h-5 w-5 text-yellow-500" />,
       }
     );

@@ -158,19 +158,9 @@ const CalendarEditor = () => {
                 </tbody>
               </table>
             </motion.div>
-          ) : draftScheduleName !== null && draftSchedule.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="font-inter flex items-center justify-center w-full h-full  m-2 text-center text-xs md:text-sm"
-            >
-              Add a class to see it here!
-            </motion.div>
           ) : (
-            <div className="font-inter m-2 text-center text-xs md:text-sm">
-              Create a new schedule or choose one of your previous ones to see
-              it here!
+            <div className="font-inter flex h-full w-full justify-center items-center m-2 text-center text-xs md:text-sm">
+              Add a class section to see it here!
             </div>
           )}
         </AnimatePresence>
