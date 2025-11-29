@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Variants } from "framer-motion";
 import {
   Tooltip,
   TooltipContent,
@@ -19,9 +20,11 @@ import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveSchedule } from "@/contexts/ActiveScheduleContext";
+import { toast } from "sonner";
+import { Sidebar as SidebarIcon, Trash2, AlertCircle } from "lucide-react";
 
 export function Sidebar() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const {
     activeSchedule,
     setActiveSchedule,
@@ -30,6 +33,7 @@ export function Sidebar() {
     userSchedules,
     loadSchedule,
     addScheduleToList,
+    removeScheduleFromList,
   } = useActiveSchedule();
 
   const [open, setOpen] = useState(true);
@@ -39,78 +43,85 @@ export function Sidebar() {
     setOpen(!open);
   };
 
-  // // Fetch schedules from API
-  // useEffect(() => {
-  //   const fetchSchedules = async () => {
-  //     try {
-  //       const response = await fetch('http://10.104.175.40:5000/api/schedule/load', {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //         body: JSON.stringify({ userID: userId }),
-  //       });
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    if (!session?.access_token) {
+      toast.error("You must be logged in to delete schedules");
+      return;
+    }
 
-  //       const data = await response.json();
-  //       console.log("Fetched schedules:", data);
-  //       setSchedules(data.schedules); // assuming API returns { schedules: [...] }
-  //     } catch (error) {
-  //       console.error("Error loading schedules:", error);
-  //     }
-  //   };
+    // Show a toast confirmation UI instead of browser confirm
+    const performDelete = async () => {
+      try {
+        const res = await fetch("/api/deleteSchedule", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ scheduleId }),
+        });
 
-  //   if (userId) {
-  //     fetchSchedules();
-  //   }
-  // }, [userId]);
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to delete schedule");
+        }
 
-  // const handleScheduleClick = async (scheduleName) => {
-  //   try {
-  //     // First API call: create the schedule
-  //     const res = await fetch('http://10.104.175.40:5000/api/schedule/create', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({ userID: userId, semester: 'Fall 2025' }),
-  //     });
+        // Remove from local context
+        removeScheduleFromList(scheduleId);
 
-  //     if (!res.ok) {
-  //       throw new Error('Failed to create schedule');
-  //     }
+        toast.success("Schedule deleted", { duration: 2000 });
+      } catch (err: any) {
+        console.error("Error deleting schedule:", err);
+        toast.error(err?.message || "Failed to delete schedule");
+      }
+    };
 
-  //     const data = await res.json();
-  //     console.log("Created schedule:", data);
+    const id = toast(
+      <div className="flex flex-col gap-2">
+        <p className="font-inter text-white">
+          Delete this schedule? This action cannot be undone.
+        </p>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={async () => {
+              toast.dismiss(id);
+              await performDelete();
+            }}
+            className="font-dmsans"
+          >
+            Confirm
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => toast.dismiss(id)}
+            className="font-dmsans"
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>,
+      {
+        style: {
+          fontFamily: "Inter",
+          backgroundColor: "#404040",
+          color: "#fff",
+        },
+        duration: Infinity,
+        icon: <AlertCircle className="h-5 w-5 text-yellow-500" />,
+      }
+    );
+  };
 
-  //     // Second API call: rename the created schedule
-  //     const renameRes = await fetch('http://10.104.175.40:5000/api/schedule/rename', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         schedID: data.schedID,
-  //         newName: scheduleName,
-  //       }),
-  //     });
-
-  //     if (!renameRes.ok) {
-  //       throw new Error('Failed to rename schedule');
-  //     }
-
-  //     const renameData = await renameRes.json();
-  //     console.log("Renamed schedule:", renameData);
-
-  //   } catch (error) {
-  //     console.error("Error during schedule creation/rename:", error);
-  //   }
-  // };
+  // Framer-motion variants removed for sidebar list (using plain list now)
 
   return (
     <div
       className={`${
         open ? "mr-[360px]" : "mr-[90px]"
-      } z-100 transition-all duration-300`}
+      } z-45 transition-all duration-300`}
     >
       <div
         className={`sidebar mr-2 flex flex-col justify-between rounded-tr-2xl rounded-br-2xl fixed top-0 left-0 h-screen transition-all duration-300 ${
@@ -122,39 +133,13 @@ export function Sidebar() {
         {/* Top section: toggle & search */}
         <div>
           <div className="buttons-container flex items-center justify-between mb-5">
-            <svg
-              viewBox="0 0 24 24"
-              height={34}
-              width={34}
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+            <SidebarIcon
+              size={34}
               className={`cursor-pointer p-1 rounded-md transition duration-500 ${
                 open ? "" : "rotate-180"
               }`}
               onClick={toggleSidebar}
-            >
-              <path
-                d="M21.97 15V9C21.97 4 19.97 2 14.97 2H8.96997C3.96997 2 1.96997 4 1.96997 9V15C1.96997 20 3.96997 22 8.96997 22H14.97C19.97 22 21.97 20 21.97 15Z"
-                stroke="#fafafa"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-              <path
-                d="M7.96997 2V22"
-                stroke="#fafafa"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-              <path
-                d="M14.97 9.43994L12.41 11.9999L14.97 14.5599"
-                stroke="#fafafa"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-            </svg>
+            />
           </div>
 
           {/* Main Sidebar Content */}
@@ -248,7 +233,7 @@ export function Sidebar() {
                       </div>
 
                       {/* Schedule list */}
-                      <ul className="list-none">
+                      <ul className="list-none overflow-scroll max-h-[300px] shadow-inner">
                         {userSchedules.length === 0 ? (
                           <p className="text-sm text-gray-400">
                             No schedules found.
@@ -260,12 +245,10 @@ export function Sidebar() {
                                 schedule.semester === activeSemester ||
                                 activeSemester === ""
                             )
-                            .map((schedule: any, index: number) => (
-                              <motion.li
-                                initial={{ y: -20 }}
-                                animate={{ y: 0}}
-                                key={index}
-                                className={`text-sm text-[#fafafa] font-inter my-2  rounded-md transition-all duration-75 ${
+                            .map((schedule: any) => (
+                              <li
+                                key={schedule.id}
+                                className={`flex justify-between items-center text-sm text-[#fafafa] font-inter my-2 rounded-md transition-all duration-75 ${
                                   activeSchedule?.id === schedule.id
                                     ? "bg-[#555] font-bold"
                                     : "hover:bg-[#333]"
@@ -281,7 +264,31 @@ export function Sidebar() {
                                 >
                                   {schedule.name}
                                 </button>
-                              </motion.li>
+                                {activeSchedule?.id === schedule.id && (
+                                  <button className="relative z-50 cursor-pointer">
+                                    <TooltipProvider key={schedule.id}>
+                                      <Tooltip delayDuration={300}>
+                                        <TooltipTrigger asChild>
+                                          <span
+                                            onClick={() =>
+                                              handleDeleteSchedule(schedule.id)
+                                            }
+                                          >
+                                            <Trash2 className="h-6 w-6 rounded-full p-1 hover:bg-gray-700 transition text-red-500 mr-2" />
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent
+                                          side="top"
+                                          sideOffset={-3}
+                                          className="font-inter"
+                                        >
+                                          Delete Schedule
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </button>
+                                )}
+                              </li>
                             ))
                         )}
                       </ul>

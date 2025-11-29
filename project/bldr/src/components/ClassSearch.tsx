@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useFloating, offset, flip, shift, size, autoUpdate, FloatingPortal } from "@floating-ui/react";
+import {
+  useFloating,
+  offset,
+  flip,
+  shift,
+  size,
+  autoUpdate,
+  FloatingPortal,
+} from "@floating-ui/react";
 import { Input } from "./ui/input";
 import {
   Accordion,
@@ -57,7 +65,6 @@ export default function ClassSearch() {
     ],
     whileElementsMounted: autoUpdate,
   });
-  
 
   useEffect(() => {
     const delay = setTimeout(() => {
