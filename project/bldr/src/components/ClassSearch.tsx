@@ -41,9 +41,8 @@ export default function ClassSearch() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const [dropdownPosStyle, setDropdownPosStyle] = useState<
-    React.CSSProperties | undefined
-  >(undefined);
+  const dropdownRef = useRef<HTMLUListElement | null>(null);
+  const [dropdownPosStyle, setDropdownPosStyle] = useState<React.CSSProperties | undefined>(undefined);
 
   // Floating UI setup
   const { x, y, strategy, refs, update, middlewareData } = useFloating({
@@ -98,6 +97,18 @@ export default function ClassSearch() {
     if (dropdownOpen) update?.();
   }, [dropdownOpen, classes.length, update]);
 
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (!dropdownRef.current || !dropdownOpen) return;
+    const listItems = dropdownRef.current.querySelectorAll('li');
+    const highlightedItem = listItems[highlightedIndex];
+    if (highlightedItem) {
+      highlightedItem.scrollIntoView({ block: 'nearest' });
+    }
+  }, [highlightedIndex, dropdownOpen]);
+
+  
+
   function handleDropdownSelect(uuid: string) {
     const isAlreadyPresent = selectedClasses.some((cls) => cls.uuid === uuid);
     if (isAlreadyPresent) {
@@ -151,6 +162,12 @@ export default function ClassSearch() {
               }}
               onFocus={() => setDropdownOpen(true)}
               onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setDropdownOpen(false);
+                  return;
+                }
+
                 if (!dropdownOpen || classes.length === 0) return;
 
                 if (e.key === "ArrowDown") {
@@ -189,7 +206,10 @@ export default function ClassSearch() {
           <FloatingPortal>
             {classes.length > 0 && dropdownOpen && (
               <ul
-                ref={(el) => refs.setFloating(el)}
+                ref={(el) => {
+                  refs.setFloating(el);
+                  dropdownRef.current = el;
+                }}
                 key="dropdown"
                 className="rounded shadow bg-[#232323] overflow-y-auto mt-2"
                 style={{ position: strategy, left: x ?? 0, top: y ?? 0 }}
