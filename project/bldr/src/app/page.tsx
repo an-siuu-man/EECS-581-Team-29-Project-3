@@ -154,7 +154,7 @@ export default function Login() {
               className={`cursor-pointer font-dmsans text-md my-3`}
               disabled={isLoading}
             >
-              {isLoading ? <Spinner /> : "Login"}
+              {isLoading ? <><Spinner />Logging in...</> : "Login"}
             </Button>
           </form>
           <div className="text-[#a8a8a8] text-xs mt-3 font-inter">

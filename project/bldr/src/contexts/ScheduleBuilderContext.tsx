@@ -152,8 +152,8 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
           },
           body: JSON.stringify({
             scheduleName: "Untitled",
-            semester: "Fall 2025",
-            year: 2025,
+            semester: "Spring 2026",
+            year: 2026,
           }),
         });
 

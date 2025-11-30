@@ -50,7 +50,8 @@ export function Sidebar() {
     removeScheduleFromList,
   } = useActiveSchedule();
 
-  const { clearDraft, draftSchedule, draftScheduleName } = useScheduleBuilder();
+  const { clearDraft, draftSchedule, draftScheduleName, setDraftScheduleName } =
+    useScheduleBuilder();
   const [open, setOpen] = useState(true);
   const [newScheduleName, setNewScheduleName] = useState("");
   const [hoveredScheduleId, setHoveredScheduleId] = useState<string | null>(
@@ -63,6 +64,50 @@ export function Sidebar() {
 
   const toggleSidebar = () => {
     setOpen(!open);
+  };
+
+  const handleCreateSchedule = async (newScheduleName: string) => {
+    if (newScheduleName.trim()) {
+      try {
+        const response = await fetch("/api/createSchedule", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            scheduleName: newScheduleName.trim(),
+            semester: activeSemester || "Spring 2026",
+            year: 2026,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create schedule");
+        }
+
+        const data = await response.json();
+
+        // Add the new schedule to the local list
+        const newSchedule = {
+          id: data.schedule.scheduleid,
+          name: data.schedule.schedulename,
+          semester: data.schedule.semester,
+          year: data.schedule.year,
+          classes: [],
+        };
+        addScheduleToList(newSchedule);
+        setNewScheduleName("");
+      } catch (error) {
+        console.error("Error creating schedule:", error);
+        // You might want to show an error message to the user here
+      }
+    } else {
+      toast(<div>Schedule name cannot be empty</div>, {
+        style: toastStyle,
+        duration: 2000,
+        icon: <AlertCircle className="h-5 w-5 text-red-500" />,
+      });
+    }
   };
 
   const handleRenameSchedule = async (scheduleId: string, newName: string) => {
@@ -97,6 +142,7 @@ export function Sidebar() {
         throw new Error(data.error || "Failed to rename schedule");
       }
 
+      setDraftScheduleName(newName.trim());
       // Update the local schedule list with the new name
       const scheduleToUpdate = userSchedules.find(
         (s: any) => s.id === scheduleId
@@ -251,12 +297,12 @@ export function Sidebar() {
                 <Accordion
                   type="single"
                   collapsible
-                  defaultValue="fall-2025"
+                  defaultValue="spring-2026"
                   className="font-figtree"
                 >
-                  <AccordionItem value="fall-2025">
+                  <AccordionItem value="spring-2026">
                     <AccordionTrigger className="text-lg  text-green-400 hover:no-underline hover:cursor-pointer font-bold">
-                      Fall 2025
+                      Spring 2026
                     </AccordionTrigger>
                     <AccordionContent className="font-inter">
                       {/* New schedule input */}
@@ -272,61 +318,18 @@ export function Sidebar() {
                           id="schedule-name"
                           value={newScheduleName}
                           onChange={(e) => setNewScheduleName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleCreateSchedule(newScheduleName);
+                            }
+                          }}
                           placeholder="Schedule name"
                           className="font-inter border-[#404040] border placeholder:text-xs selection:bg-blue-400 text-xs"
                         />
                         <Button
                           type="submit"
-                          onClick={async () => {
-                            if (newScheduleName.trim()) {
-                              try {
-                                const response = await fetch(
-                                  "/api/createSchedule",
-                                  {
-                                    method: "POST",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                      scheduleName: newScheduleName.trim(),
-                                      semester: activeSemester || "Fall 2025",
-                                      year: 2025,
-                                    }),
-                                  }
-                                );
-
-                                if (!response.ok) {
-                                  throw new Error("Failed to create schedule");
-                                }
-
-                                const data = await response.json();
-
-                                // Add the new schedule to the local list
-                                const newSchedule = {
-                                  id: data.schedule.scheduleid,
-                                  name: data.schedule.schedulename,
-                                  semester: data.schedule.semester,
-                                  year: data.schedule.year,
-                                  classes: [],
-                                };
-                                addScheduleToList(newSchedule);
-                                setNewScheduleName("");
-                              } catch (error) {
-                                console.error(
-                                  "Error creating schedule:",
-                                  error
-                                );
-                                // You might want to show an error message to the user here
-                              }
-                            } else {
-                              toast(<div>Schedule name cannot be empty</div>, {
-                                style: toastStyle,
-                                duration: 2000,
-                                icon: (
-                                  <AlertCircle className="h-5 w-5 text-red-500" />
-                                ),
-                              });
-                            }
+                          onClick={() => {
+                            handleCreateSchedule(newScheduleName);
                           }}
                           className="bg-[#fafafa] text-xs text-[#1a1a1a] hover:bg-[#404040] hover:text-[#fafafa] cursor-pointer font-dmsans text-md"
                         >
@@ -335,120 +338,131 @@ export function Sidebar() {
                       </div>
 
                       {/* Schedule list */}
-                      <ul className="list-none overflow-y-scroll overflow-x-hidden scrollbar-hidden max-h-[300px] shadow-inner">
+                      <ul className="list-none overflow-y-scroll overflow-x-hidden scrollbar-hidden max-h-[300px]">
                         {userSchedules.length === 0 ? (
                           <p className="text-sm text-gray-400">
                             No schedules found.
                           </p>
                         ) : (
-                          userSchedules
-                            .filter(
-                              (schedule: any) =>
-                                schedule.semester === activeSemester ||
-                                activeSemester === ""
-                            )
-                            .map((schedule: any) => (
-                              <li
-                                key={schedule.id}
-                                onMouseEnter={() =>
-                                  setHoveredScheduleId(schedule.id)
-                                }
-                                onMouseLeave={() => setHoveredScheduleId(null)}
-                                className={`flex justify-between items-center text-sm text-[#fafafa] font-inter my-2 rounded-md transition-all duration-75 ${
-                                  activeSchedule?.id === schedule.id
-                                    ? "bg-[#555] font-bold"
-                                    : "hover:bg-[#333]"
-                                }`}
-                              >
-                                {renamingScheduleId === schedule.id ? (
-                                  <div className="flex items-center gap-2 w-full px-2 py-1">
-                                    <Input
-                                      type="text"
-                                      value={renameValue}
-                                      onChange={(e) =>
-                                        setRenameValue(e.target.value)
-                                      }
-                                      onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
+                          <AnimatePresence initial={false}>
+                            {userSchedules
+                              .filter(
+                                (schedule: any) =>
+                                  schedule.semester === activeSemester ||
+                                  activeSemester === ""
+                              )
+                              .map((schedule: any) => (
+                                <motion.li
+                                  key={schedule.id}
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: 10 }}
+                                  transition={{
+                                    duration: 0.15,
+                                    ease: [0.4, 0, 0.2, 1],
+                                  }}
+                                  onMouseEnter={() =>
+                                    setHoveredScheduleId(schedule.id)
+                                  }
+                                  onMouseLeave={() =>
+                                    setHoveredScheduleId(null)
+                                  }
+                                  className={`flex justify-between items-center text-sm text-[#fafafa] font-inter my-2 rounded-md ${
+                                    activeSchedule?.id === schedule.id
+                                      ? "bg-[#555] font-bold"
+                                      : "hover:bg-[#333]"
+                                  }`}
+                                >
+                                  {renamingScheduleId === schedule.id ? (
+                                    <div className="flex items-center gap-2 w-full px-2 py-1">
+                                      <Input
+                                        type="text"
+                                        value={renameValue}
+                                        onChange={(e) =>
+                                          setRenameValue(e.target.value)
+                                        }
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter") {
+                                            handleRenameSchedule(
+                                              schedule.id,
+                                              renameValue
+                                            );
+                                          } else if (e.key === "Escape") {
+                                            cancelRenaming();
+                                          }
+                                        }}
+                                        autoFocus
+                                        className="h-7 text-xs border-[#404040] bg-[#2a2a2a] flex-1"
+                                      />
+                                      <button
+                                        onClick={() =>
                                           handleRenameSchedule(
                                             schedule.id,
                                             renameValue
-                                          );
-                                        } else if (e.key === "Escape") {
-                                          cancelRenaming();
+                                          )
                                         }
-                                      }}
-                                      autoFocus
-                                      className="h-7 text-xs border-[#404040] bg-[#2a2a2a] flex-1"
-                                    />
-                                    <button
-                                      onClick={() =>
-                                        handleRenameSchedule(
-                                          schedule.id,
-                                          renameValue
-                                        )
-                                      }
-                                      className="p-1 hover:bg-[#444] rounded transition cursor-pointer"
-                                    >
-                                      <Check className="h-4 w-4 text-green-500" />
-                                    </button>
-                                    <button
-                                      onClick={cancelRenaming}
-                                      className="p-1 hover:bg-[#444] rounded transition cursor-pointer"
-                                    >
-                                      <X className="h-4 w-4 text-red-500" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <>
-                                    <button
-                                      className="py-2 px-3 cursor-pointer w-full text-left"
-                                      onClick={() => {
-                                        loadSchedule(schedule.id);
-                                        setActiveSemester(schedule.semester);
-                                        console.log(activeSchedule);
-                                      }}
-                                    >
-                                      {schedule.name}
-                                    </button>
-                                    {hoveredScheduleId === schedule.id && (
-                                      <Popover>
-                                        <PopoverTrigger asChild>
-                                          <button className="flex items-center z-50 cursor-pointer">
-                                            <MoreHorizontal className="h-4 w-4 mr-2" />
-                                          </button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="bg-[#2a2a2a] border rounded-md border-[#404040] p-2 w-fit">
-                                          <div className="flex flex-col items-start justify-between gap-1 text-sm">
-                                            <span
-                                              className="p-2 rounded-md w-full flex flex-row items-center justify-start gap-2 font-inter cursor-pointer hover:bg-[#444] transition"
-                                              onClick={() =>
-                                                startRenaming(schedule)
-                                              }
-                                            >
-                                              <Edit2 className="h-4 w-4" />
-                                              Rename
-                                            </span>
-                                            <hr className="w-full border-t border-[#606060]" />
-                                            <span
-                                              className="p-2 rounded-md w-full flex flex-row items-center justify-start gap-2 font-inter cursor-pointer hover:bg-[#444] transition text-red-500"
-                                              onClick={() =>
-                                                handleDeleteSchedule(
-                                                  schedule.id
-                                                )
-                                              }
-                                            >
-                                              <Trash2 className="h-4 w-4 " />
-                                              Delete
-                                            </span>
-                                          </div>
-                                        </PopoverContent>
-                                      </Popover>
-                                    )}
-                                  </>
-                                )}
-                              </li>
-                            ))
+                                        className="p-1 hover:bg-[#444] rounded transition cursor-pointer"
+                                      >
+                                        <Check className="h-4 w-4 text-green-500" />
+                                      </button>
+                                      <button
+                                        onClick={cancelRenaming}
+                                        className="p-1 hover:bg-[#444] rounded transition cursor-pointer"
+                                      >
+                                        <X className="h-4 w-4 text-red-500" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <button
+                                        className="py-2 px-3 cursor-pointer w-full text-left truncate"
+                                        onClick={() => {
+                                          loadSchedule(schedule.id);
+                                          setActiveSemester(schedule.semester);
+                                          console.log(activeSchedule);
+                                        }}
+                                      >
+                                        {schedule.name}
+                                      </button>
+                                      {hoveredScheduleId === schedule.id && (
+                                        <Popover>
+                                          <PopoverTrigger asChild>
+                                            <button className="flex items-center z-50 cursor-pointer">
+                                              <MoreHorizontal className="h-4 w-4 mr-2" />
+                                            </button>
+                                          </PopoverTrigger>
+                                          <PopoverContent className="bg-[#2a2a2a] border rounded-md border-[#404040] p-2 w-fit">
+                                            <div className="flex flex-col items-start justify-between gap-1 text-sm">
+                                              <span
+                                                className="p-2 rounded-md w-full flex flex-row items-center justify-start gap-2 font-inter cursor-pointer hover:bg-[#444] transition"
+                                                onClick={() =>
+                                                  startRenaming(schedule)
+                                                }
+                                              >
+                                                <Edit2 className="h-4 w-4" />
+                                                Rename
+                                              </span>
+                                              <hr className="w-full border-t border-[#606060]" />
+                                              <span
+                                                className="p-2 rounded-md w-full flex flex-row items-center justify-start gap-2 font-inter cursor-pointer hover:bg-[#444] transition text-red-500"
+                                                onClick={() =>
+                                                  handleDeleteSchedule(
+                                                    schedule.id
+                                                  )
+                                                }
+                                              >
+                                                <Trash2 className="h-4 w-4 " />
+                                                Delete
+                                              </span>
+                                            </div>
+                                          </PopoverContent>
+                                        </Popover>
+                                      )}
+                                    </>
+                                  )}
+                                </motion.li>
+                              ))}
+                          </AnimatePresence>
                         )}
                       </ul>
                     </AccordionContent>
