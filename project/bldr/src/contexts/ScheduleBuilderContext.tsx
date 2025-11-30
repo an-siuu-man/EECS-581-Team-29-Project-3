@@ -15,7 +15,7 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
   // const { setActiveSchedule, setActiveSemester } = useActiveSchedule();
   // Helper to sync state with localStorage
   const usePersistedState = (key: string, initialValue: any) => {
-    const [state, setState] = useState(() => {
+    const [state, setStateInternal] = useState(() => {
       if (typeof window !== "undefined") {
         const stored = localStorage.getItem(key);
         return stored ? JSON.parse(stored) : initialValue;
@@ -23,11 +23,20 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
       return initialValue;
     });
 
-    useEffect(() => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(key, JSON.stringify(state));
-      }
-    }, [key, state]);
+    // Wrap setState to immediately sync to localStorage on every update
+    const setState = (valueOrUpdater: any) => {
+      setStateInternal((prev: any) => {
+        const nextValue =
+          typeof valueOrUpdater === "function"
+            ? valueOrUpdater(prev)
+            : valueOrUpdater;
+        // Sync to localStorage immediately within the same update
+        if (typeof window !== "undefined") {
+          localStorage.setItem(key, JSON.stringify(nextValue));
+        }
+        return nextValue;
+      });
+    };
 
     return [state, setState];
   };

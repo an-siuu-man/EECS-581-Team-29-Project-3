@@ -6,6 +6,7 @@ import { useActiveSchedule } from "@/contexts/ActiveScheduleContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { LogOut, AlertCircle, Trash2, X, Check, Save } from "lucide-react";
 import toastStyle from "@/components/ui/toastStyle";
@@ -26,16 +27,61 @@ export default function Builder() {
     setIsEditingExisting,
     setExistingScheduleId,
   } = useScheduleBuilder();
-  const { addScheduleToList, updateScheduleInList, fetchUserSchedules } =
-    useActiveSchedule();
+  const {
+    activeSchedule,
+    addScheduleToList,
+    updateScheduleInList,
+    fetchUserSchedules,
+  } = useActiveSchedule();
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
+  const [creditHours, setCreditHours] = useState(0);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Helper to compare schedules regardless of order
+  const areSchedulesEqual = (a: any[] | undefined, b: any[] | undefined) => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (a.length !== b.length) return false;
+    const uuidsA = new Set(a.map((cls: any) => cls.uuid));
+    const uuidsB = new Set(b.map((cls: any) => cls.uuid));
+    if (uuidsA.size !== uuidsB.size) return false;
+    for (const uuid of uuidsA) {
+      if (!uuidsB.has(uuid)) return false;
+    }
+    return true;
+  };
+
+  const schedulesMatch = areSchedulesEqual(
+    activeSchedule?.classes,
+    draftSchedule
+  );
+
+  // Hydration check - ensures localStorage data is loaded
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push("/");
     }
   }, [user, loading, router]);
+
+  // Calculate credit hours after hydration and when draftSchedule changes
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (draftSchedule.length > 0) {
+      const totalCreditHours = draftSchedule
+        .filter((cls: any) => cls.component == "LEC")
+        .map((cls: any) => Number(cls.credithours) || 0)
+        .reduce((a: number, b: number) => a + b, 0);
+      setCreditHours(totalCreditHours);
+    } else {
+      setCreditHours(0);
+    }
+  }, [draftSchedule, isHydrated]);
 
   const handleLogout = async () => {
     try {
@@ -254,34 +300,77 @@ export default function Builder() {
             {/* Calendar Section */}
             <div className="flex flex-col items-end">
               <CalendarEditor />
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleSaveSchedule}
-                  className="font-dmsans cursor-pointer w- max-w-[600px]"
-                  disabled={draftSchedule.length === 0 || isSaving}
-                >
-                  {isSaving ? (
-                    <>
-                      <Spinner />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      {" "}
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Schedule
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleClearSchedule}
-                  variant="destructive"
-                  className="font-dmsans cursor-pointer w- max-w-[600px]"
-                  disabled={draftSchedule.length === 0}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear Schedule
-                </Button>
+              <div className="w-full flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                <div className="text-sm flex flex-wrap gap-2 items-center text-[#A8A8A8] font-inter">
+                  <motion.div
+                    layout
+                    initial={false}
+                    transition={{ layout: { duration: 0.22, ease: "easeOut" } }}
+                    className="bg-[#404040] rounded-full py-1 px-2 inline-flex items-center"
+                  >
+                    <span className="md:whitespace-nowrap">
+                      Total Credit Hours:
+                    </span>
+                    <b className="ml-1">{creditHours}</b>
+                  </motion.div>
+
+                  <AnimatePresence mode="wait">
+                    {schedulesMatch && (
+                      <motion.div
+                        key="saved-badge"
+                        initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                        transition={{ duration: 0.22 }}
+                        className="bg-green-600 text-[#333] rounded-full py-1 px-2"
+                      >
+                        Saved schedule
+                      </motion.div>
+                    )}
+
+                    {!schedulesMatch && (
+                      <motion.div
+                        key="unsaved-badge"
+                        initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                        transition={{ duration: 0.22 }}
+                        className="rounded-full py-1 px-2 text-[#333] bg-yellow-500"
+                      >
+                        Unsaved changes
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto md:justify-end">
+                  <Button
+                    onClick={handleSaveSchedule}
+                    className="font-dmsans cursor-pointer w-full md:w-auto max-w-[600px]"
+                    disabled={draftSchedule.length === 0 || isSaving}
+                  >
+                    {isSaving ? (
+                      <>
+                        <Spinner />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        {" "}
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Schedule
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleClearSchedule}
+                    variant="destructive"
+                    className="font-dmsans cursor-pointer w-full md:w-auto max-w-[600px]"
+                    disabled={draftSchedule.length === 0}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear Schedule
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
