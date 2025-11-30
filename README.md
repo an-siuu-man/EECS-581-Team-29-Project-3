@@ -98,8 +98,7 @@ The application follows a modern full-stack architecture:
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                     API Routes                               │
-│  /api/searchclass  /api/saveSchedule  /api/getClassInfo     │
-│  /api/createSchedule  /api/renameSchedule  /api/deleteSchedule│
+│         (Class Search, Schedule CRUD Operations)             │
 └─────────────────────────────────────────────────────────────┘
                            │
                            ▼
@@ -203,15 +202,11 @@ project/bldr/
 
 ## 📊 Database Schema
 
-The application uses the following main tables:
-
-| Table | Description |
-|-------|-------------|
-| `allclasses` | Course catalog with class details |
-| `allschedules` | User-created schedules |
-| `scheduleclasses` | Junction table linking schedules to classes |
-| `userdata` | User account information |
-| `userschedule` | User-schedule associations |
+The application uses a PostgreSQL database with tables for:
+- Course catalog data
+- User-created schedules
+- Schedule-class relationships
+- User account information
 
 For detailed schema information, see the [ER Diagram](./Initial%20Architecture%20diagrams/er_diagram.png).
 
