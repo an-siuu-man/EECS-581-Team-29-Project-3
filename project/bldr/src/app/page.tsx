@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import toastStyle from "@/components/ui/toastStyle";
+import { motion } from "framer-motion";
 
 export default function Login() {
   const router = useRouter();
@@ -95,7 +96,12 @@ export default function Login() {
   return (
     <div className="landing-page ">
       <div className="flex flex-col justify-start items-center h-screen py-10">
-        <div className="header w-full flex flex-col justify-start items-center mb-10">
+        <motion.div
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+          className="header w-full flex flex-col justify-start items-center mb-10"
+        >
           <h1 className="text-5xl font-figtree font-semibold mb-3">
             Welcome to
             <span className="font-dmsans font-bold">
@@ -108,8 +114,13 @@ export default function Login() {
           <h2 className="text-3xl font-dmsans text-[#A8A8A8] ">
             Flagship Schedule Builder
           </h2>
-        </div>
-        <div className="login-form flex flex-col justify-center items-center w-fit border border-[#404040] p-10 rounded-lg">
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
+          className="login-form flex flex-col justify-center items-center w-fit border border-[#404040] p-10 rounded-lg"
+        >
           <div className="form-header w-full flex flex-col justify-start items-start mb-2">
             <h1 className="text-3xl font-bold font-dmsans mb-2 ">Login</h1>
             <h2 className="text-[#A8A8A8] text-xs font-inter mb-4">
@@ -117,47 +128,77 @@ export default function Login() {
             </h2>
           </div>
           <form className="flex flex-col gap-4 w-96" onSubmit={handleSubmit}>
-            <div className="w-full flex justify-between items-center -mb-1">
-              <Label htmlFor="email" className="text-sm font-inter -mb-1">
-                Email
-              </Label>
-            </div>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              id="email"
-              placeholder="your.email@example.com"
-              className={`font-inter selection:bg-blue-400 border-[#404040] border-2`}
-              required
-              disabled={isLoading}
-            />
-
-            <div className="w-full flex justify-between items-center -mb-1">
-              <Label htmlFor="password" className="text-sm font-inter -mb-1">
-                Password
-              </Label>
-            </div>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              id="password"
-              placeholder="********"
-              className={`font-inter selection:bg-blue-400 border-[#404040] border-2`}
-              required
-              disabled={isLoading}
-            />
-            <Button
-              type="submit"
-              variant={"secondary"}
-              className={`cursor-pointer font-dmsans text-md my-3`}
-              disabled={isLoading}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.4 }}
             >
-              {isLoading ? <><Spinner />Logging in...</> : "Login"}
-            </Button>
+              <div className="w-full flex justify-between items-center mb-2">
+                <Label htmlFor="email" className="text-sm font-inter">
+                  Email
+                </Label>
+              </div>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                id="email"
+                placeholder="your.email@example.com"
+                className={`font-inter selection:bg-blue-400 border-[#404040] border-2`}
+                required
+                disabled={isLoading}
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.5 }}
+            >
+              <div className="w-full flex justify-between items-center mb-2">
+                <Label htmlFor="password" className="text-sm font-inter">
+                  Password
+                </Label>
+              </div>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                id="password"
+                placeholder="********"
+                className={`font-inter selection:bg-blue-400 border-[#404040] border-2`}
+                required
+                disabled={isLoading}
+              />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.6 }}
+            >
+              <Button
+                type="submit"
+                variant={"secondary"}
+                className={`w-full cursor-pointer font-dmsans text-md my-3`}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Spinner />
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
+              </Button>
+            </motion.div>
           </form>
-          <div className="text-[#a8a8a8] text-xs mt-3 font-inter">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.7 }}
+            className="text-[#a8a8a8] text-xs mt-3 font-inter"
+          >
             Don't have an account with us?{" "}
             <Link
               href={"/signup"}
@@ -165,8 +206,8 @@ export default function Login() {
             >
               Sign up
             </Link>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   );
