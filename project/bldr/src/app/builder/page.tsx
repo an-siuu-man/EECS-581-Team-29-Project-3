@@ -26,16 +26,42 @@ export default function Builder() {
     setIsEditingExisting,
     setExistingScheduleId,
   } = useScheduleBuilder();
-  const { addScheduleToList, updateScheduleInList, fetchUserSchedules } =
-    useActiveSchedule();
+  const {
+    activeSchedule,
+    addScheduleToList,
+    updateScheduleInList,
+    fetchUserSchedules,
+  } = useActiveSchedule();
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
+  const [creditHours, setCreditHours] = useState(0);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Hydration check - ensures localStorage data is loaded
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push("/");
     }
   }, [user, loading, router]);
+
+  // Calculate credit hours after hydration and when draftSchedule changes
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (draftSchedule.length > 0) {
+      const totalCreditHours = draftSchedule
+        .filter((cls: any) => cls.component == "LEC")
+        .map((cls: any) => Number(cls.credithours) || 0)
+        .reduce((a: number, b: number) => a + b, 0);
+      setCreditHours(totalCreditHours);
+    } else {
+      setCreditHours(0);
+    }
+  }, [draftSchedule, isHydrated]);
 
   const handleLogout = async () => {
     try {
@@ -254,34 +280,52 @@ export default function Builder() {
             {/* Calendar Section */}
             <div className="flex flex-col items-end">
               <CalendarEditor />
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleSaveSchedule}
-                  className="font-dmsans cursor-pointer w- max-w-[600px]"
-                  disabled={draftSchedule.length === 0 || isSaving}
-                >
-                  {isSaving ? (
-                    <>
-                      <Spinner />
-                      Saving...
-                    </>
+              <div className="w-full flex flex-row justify-between items-center">
+                <div className="text-sm flex flex-row gap-2 items-center text-[#A8A8A8] font-inter">
+                  <div className="bg-[#404040] rounded-full py-1 px-2">
+                    Total Credit Hours: <b>{creditHours}</b>
+                  </div>
+
+                  {JSON.stringify(activeSchedule?.classes) ===
+                  JSON.stringify(draftSchedule) ? (
+                    <div className="bg-green-600 text-[#333] rounded-full py-1 px-2">
+                      Saved schedule
+                    </div>
                   ) : (
-                    <>
-                      {" "}
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Schedule
-                    </>
+                    <div className="rounded-full py-1 px-2 text-[#333] bg-yellow-500">
+                      Unsaved changes
+                    </div>
                   )}
-                </Button>
-                <Button
-                  onClick={handleClearSchedule}
-                  variant="destructive"
-                  className="font-dmsans cursor-pointer w- max-w-[600px]"
-                  disabled={draftSchedule.length === 0}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear Schedule
-                </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleSaveSchedule}
+                    className="font-dmsans cursor-pointer  max-w-[600px]"
+                    disabled={draftSchedule.length === 0 || isSaving}
+                  >
+                    {isSaving ? (
+                      <>
+                        <Spinner />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        {" "}
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Schedule
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleClearSchedule}
+                    variant="destructive"
+                    className="font-dmsans cursor-pointer w- max-w-[600px]"
+                    disabled={draftSchedule.length === 0}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear Schedule
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
