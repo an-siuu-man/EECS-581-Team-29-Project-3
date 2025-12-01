@@ -16,12 +16,15 @@ import {
   Check,
   Save,
   CheckCheck,
+  AlertTriangle,
+  UserPlus,
 } from "lucide-react";
 import toastStyle from "@/components/ui/toastStyle";
 import ClassSearch from "@/components/ClassSearch";
 import { Sidebar } from "@/components/Sidebar";
 import CalendarEditor from "@/components/CalendarEditor";
 import { Spinner } from "@/components/ui/spinner";
+import Link from "next/link";
 
 export default function Builder() {
   const { user, session, loading, signOut } = useAuth();
@@ -45,6 +48,10 @@ export default function Builder() {
   const [isSaving, setIsSaving] = useState(false);
   const [creditHours, setCreditHours] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [showGuestBanner, setShowGuestBanner] = useState(true);
+
+  // Check if user is a guest (anonymous)
+  const isGuest = user?.is_anonymous === true;
 
   // Helper to compare schedules regardless of order
   const areSchedulesEqual = (a: any[] | undefined, b: any[] | undefined) => {
@@ -201,6 +208,35 @@ export default function Builder() {
         });
       }
 
+      // Show reminder for guest users after successful save
+      if (isGuest) {
+        setTimeout(() => {
+          toast(
+            <div className="flex flex-col gap-2">
+              <p className="font-inter text-white">
+                Schedule saved! Create an account to keep it permanently.
+              </p>
+              <Link href="/upgrade">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="font-dmsans cursor-pointer"
+                  onClick={() => toast.dismiss()}
+                >
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Upgrade Account
+                </Button>
+              </Link>
+            </div>,
+            {
+              style: { ...toastStyle },
+              duration: 6000,
+              icon: <AlertTriangle className="h-5 w-5 text-yellow-500" />,
+            }
+          );
+        }, 500);
+      }
+
       // Refresh the schedule list
       await fetchUserSchedules();
     } catch (error: any) {
@@ -281,6 +317,45 @@ export default function Builder() {
       {/* Main Content */}
       <div className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">
+          {/* Guest Warning Banner */}
+          <AnimatePresence>
+            {isGuest && showGuestBanner && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="mb-6 bg-yellow-900/40 border border-yellow-600/50 rounded-lg p-4 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0" />
+                  <div>
+                    <p className="text-yellow-200 font-inter text-sm">
+                      <span className="font-semibold">
+                        You're using guest mode.
+                      </span>{" "}
+                      Your schedules will be lost when you close this tab.{" "}
+                      <Link
+                        href="/upgrade"
+                        className="underline hover:text-yellow-100 font-medium"
+                      >
+                        Create an account
+                      </Link>{" "}
+                      to save them permanently.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowGuestBanner(false)}
+                  className="text-yellow-500 hover:text-yellow-300 p-1 rounded transition cursor-pointer"
+                  aria-label="Dismiss banner"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Header */}
           <div className="flex justify-between items-center">
             <div>
@@ -294,7 +369,7 @@ export default function Builder() {
                 Schedule Builder
               </h1>
               <p className="text-[#A8A8A8] font-inter">
-                Welcome back, {user.email}!
+                Welcome back, {user.is_anonymous ? "Guest" : user.email}!
               </p>
             </div>
             <Button
