@@ -106,16 +106,17 @@ export default function UpgradeAccount() {
       }
 
       if (data.user) {
-        toast.success("Account Upgraded!", {
+        toast.success("Account Created!", {
           style: toastStyle,
           description:
-            "Your account is now permanent. All your schedules have been saved.",
-          duration: 4000,
+            "Please check your email to verify your account, then log in.",
+          duration: 5000,
           icon: <CheckCircle2 className="h-5 w-5" />,
         });
 
-        // Redirect back to builder
-        router.push("/builder");
+        // Sign out the anonymous session and redirect to login
+        await supabase.auth.signOut();
+        router.push("/");
         router.refresh();
       }
     } catch (error) {
