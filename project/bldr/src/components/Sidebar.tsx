@@ -67,42 +67,39 @@ export function Sidebar() {
   };
 
   const handleCreateSchedule = async (newScheduleName: string) => {
-    if (newScheduleName.trim()) {
-      try {
-        const response = await fetch("/api/createSchedule", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            scheduleName: newScheduleName.trim(),
-            semester: activeSemester || "Spring 2026",
-            year: 2026,
-          }),
-        });
+    const scheduleName = newScheduleName.trim() || "Untitled";
+    try {
+      const response = await fetch("/api/createSchedule", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          scheduleName: scheduleName,
+          semester: activeSemester || "Spring 2026",
+          year: 2026,
+        }),
+      });
 
-        if (!response.ok) {
-          throw new Error("Failed to create schedule");
-        }
-
-        const data = await response.json();
-
-        // Add the new schedule to the local list
-        const newSchedule = {
-          id: data.schedule.scheduleid,
-          name: data.schedule.schedulename,
-          semester: data.schedule.semester,
-          year: data.schedule.year,
-          classes: [],
-        };
-        addScheduleToList(newSchedule);
-        setNewScheduleName("");
-      } catch (error) {
-        console.error("Error creating schedule:", error);
-        // You might want to show an error message to the user here
+      if (!response.ok) {
+        throw new Error("Failed to create schedule");
       }
-    } else {
-      toast(<div>Schedule name cannot be empty</div>, {
+
+      const data = await response.json();
+
+      // Add the new schedule to the local list
+      const newSchedule = {
+        id: data.schedule.scheduleid,
+        name: data.schedule.schedulename,
+        semester: data.schedule.semester,
+        year: data.schedule.year,
+        classes: [],
+      };
+      addScheduleToList(newSchedule);
+      setNewScheduleName("");
+    } catch (error) {
+      console.error("Error creating schedule:", error);
+      toast.error("Failed to create schedule", {
         style: toastStyle,
         duration: 2000,
         icon: <AlertCircle className="h-5 w-5 text-red-500" />,
