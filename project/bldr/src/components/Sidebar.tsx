@@ -32,6 +32,7 @@ import {
   X,
   User,
   Sparkles,
+  UserPlus,
 } from "lucide-react";
 import toastStyle from "@/components/ui/toastStyle";
 import { set } from "date-fns";
@@ -499,8 +500,8 @@ export function Sidebar() {
                     variant="outline"
                     className="w-full cursor-pointer font-dmsans border-yellow-600/50 text-yellow-400 hover:bg-yellow-900/30 hover:text-yellow-300"
                   >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Upgrade Account
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Create Account
                   </Button>
                 </Link>
               </motion.div>
