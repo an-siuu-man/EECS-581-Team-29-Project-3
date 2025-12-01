@@ -53,7 +53,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${inter.variable} ${figtree.variable} ${dmsans.variable} ${geistMono.variable} antialiased`}
       >
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-3YGNZZCQGY"
+          src={process.env.NEXT_PUBLIC_GOOGLE_MANAGER_URL}
           strategy="afterInteractive"
         />
         <Script id="google-analytics" strategy="afterInteractive">
@@ -61,7 +61,7 @@ export default function RootLayout({
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'G-3YGNZZCQGY');`}
+  gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}');`}
         </Script>
 
         <ThemeProvider
