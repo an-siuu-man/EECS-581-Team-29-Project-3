@@ -233,11 +233,6 @@ For detailed schema information, see the [ER Diagram](./Initial%20Architecture%2
 
 ---
 
-## 📝 License
-
-This project was created as part of EECS 581 at the University of Kansas.
-
----
 
 <div align="center">
 
