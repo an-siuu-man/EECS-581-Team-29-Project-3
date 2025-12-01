@@ -31,12 +31,14 @@ import {
   Check,
   X,
   User,
+  Sparkles,
 } from "lucide-react";
 import toastStyle from "@/components/ui/toastStyle";
 import { set } from "date-fns";
 import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
 import { se } from "date-fns/locale";
 import { Spinner } from "./ui/spinner";
+import Link from "next/link";
 
 export function Sidebar() {
   const { user, session } = useAuth();
@@ -336,7 +338,13 @@ export function Sidebar() {
                           }}
                           className="bg-[#fafafa] text-xs text-[#1a1a1a] hover:bg-[#404040] hover:text-[#fafafa] cursor-pointer font-dmsans text-md"
                         >
-                          {loading ? <><Spinner /> Creating...</> : "Create"}
+                          {loading ? (
+                            <>
+                              <Spinner /> Creating...
+                            </>
+                          ) : (
+                            "Create"
+                          )}
                         </Button>
                       </div>
 
@@ -477,21 +485,45 @@ export function Sidebar() {
         </div>
 
         {/* Bottom Section */}
-        <div className="flex flex-row w-full items-center justify-start gap-2">
-          <User />
+        <div className="flex flex-col w-full gap-3">
+          {/* Upgrade button for guest users */}
           <AnimatePresence>
-            {open && (
+            {open && user?.is_anonymous && (
               <motion.div
-                initial={{ opacity: 0, translateY: 40 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                exit={{ opacity: 0, translateY: 40 }}
-                key={user?.email}
-                className="font-figtree text-md"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
               >
-                {user?.email}
+                <Link href="/upgrade">
+                  <Button
+                    variant="outline"
+                    className="w-full cursor-pointer font-dmsans border-yellow-600/50 text-yellow-400 hover:bg-yellow-900/30 hover:text-yellow-300"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Upgrade Account
+                  </Button>
+                </Link>
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* User info */}
+          <div className="flex flex-row w-full items-center justify-start gap-2">
+            <User />
+            <AnimatePresence>
+              {open && (
+                <motion.div
+                  initial={{ opacity: 0, translateY: 40 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  exit={{ opacity: 0, translateY: 40 }}
+                  key={user?.email || "guest"}
+                  className="font-figtree text-md"
+                >
+                  {user?.is_anonymous ? "Guest" : user?.email}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>
