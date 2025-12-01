@@ -37,9 +37,26 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "bldr: Flagship Schedule Builder",
+  title: "bldr — College Schedule Builder",
   description:
-    "This is a student-led effort to ease the schedule building process for college students.",
+    "bldr is a student-built schedule planner that helps college students quickly search courses, build conflict-free semester timetables, and save or share optimized schedules. Features include fast course search, visual calendar editing, real-time conflict detection, and easy schedule management for degree planning.",
+  keywords: [
+    "university of kansas",
+    "ku",
+    "bldr",
+    "college schedule builder",
+    "class planner",
+    "timetable maker",
+    "course scheduler",
+    "student schedule",
+    "academic planner",
+    "class search",
+    "schedule optimization",
+  ],
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
