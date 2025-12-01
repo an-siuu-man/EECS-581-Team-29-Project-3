@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { useActiveSchedule } from "@/contexts/ActiveScheduleContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { timeToDecimal } from "@/lib/timeUtils";
 import { parseDays } from "@/lib/timeUtils";
 import { toast } from "sonner";
@@ -12,7 +13,11 @@ import { Trash2 } from "lucide-react";
 const ScheduleBuilderContext = createContext<any>(undefined);
 
 export const ScheduleBuilderProvider = ({ children }: any) => {
-  // const { setActiveSchedule, setActiveSemester } = useActiveSchedule();
+  const { user, loading } = useAuth();
+
+  // Track the previous user ID to detect user changes
+  const prevUserIdRef = useRef<string | null | undefined>(undefined);
+
   // Helper to sync state with localStorage
   const usePersistedState = (key: string, initialValue: any) => {
     const [state, setStateInternal] = useState(() => {
@@ -86,6 +91,39 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
     setActiveSchedule = null;
     addScheduleToList = null;
   }
+
+  // Clear draft state when user changes (sign-out or different user signs in)
+  useEffect(() => {
+    if (loading) return; // wait until auth has finished initializing
+
+    const currentUserId = user?.id ?? null;
+    const prevUserId = prevUserIdRef.current;
+
+    // Detect user change — skip the very first render (prevUserId === undefined)
+    // to avoid clearing on page refresh
+    if (prevUserId !== undefined && prevUserId !== currentUserId) {
+      // User changed — clear all draft state in React and localStorage
+      setDraftSchedule([]);
+      setDraftScheduleName("");
+      setDraftSemester("");
+      setDraftYear("");
+      setIsEditingExisting(false);
+      setExistingScheduleId(null);
+
+      // Also clear localStorage to prevent stale reads on next mount
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("draftSchedule");
+        localStorage.removeItem("draftScheduleName");
+        localStorage.removeItem("draftSemester");
+        localStorage.removeItem("draftYear");
+        localStorage.removeItem("isEditingExisting");
+        localStorage.removeItem("existingScheduleId");
+      }
+    }
+
+    // Update the ref for next comparison
+    prevUserIdRef.current = currentUserId;
+  }, [user?.id, loading]);
 
   // When a schedule becomes active, copy its classes into the draft so the
   // schedule builder immediately reflects the selected active schedule.

@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useRef,
   ReactNode,
 } from "react";
 import { Schedule } from "@/types";
@@ -44,6 +45,10 @@ export const ActiveScheduleProvider = ({
   children: ReactNode;
 }) => {
   const { user, session, loading } = useAuth();
+
+  // Track the previous user ID to detect user changes
+  const prevUserIdRef = useRef<string | null | undefined>(undefined);
+
   // Helper to sync state with localStorage
   const usePersistedState = <T,>(key: string, initialValue: T) => {
     const [state, setState] = useState<T>(() => {
@@ -159,11 +164,30 @@ export const ActiveScheduleProvider = ({
   useEffect(() => {
     if (loading) return; // wait until auth has finished initializing
 
-    if (user?.id) {
-      fetchUserSchedules();
-    } else {
+    const currentUserId = user?.id ?? null;
+    const prevUserId = prevUserIdRef.current;
+
+    // Detect user change (sign-out, sign-in as different user, or first load after sign-in)
+    // Skip the very first render (prevUserId === undefined) to avoid clearing on page refresh
+    if (prevUserId !== undefined && prevUserId !== currentUserId) {
+      // User changed — clear all persisted state in React and localStorage
       setUserSchedules([]);
       setActiveSchedule(null);
+      setActiveSemester("");
+
+      // Also clear localStorage to prevent stale reads on next mount
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("activeSchedule");
+        localStorage.removeItem("activeSemester");
+        localStorage.removeItem("userSchedules");
+      }
+    }
+
+    // Update the ref for next comparison
+    prevUserIdRef.current = currentUserId;
+
+    if (user?.id) {
+      fetchUserSchedules();
     }
   }, [user?.id, loading]);
 
