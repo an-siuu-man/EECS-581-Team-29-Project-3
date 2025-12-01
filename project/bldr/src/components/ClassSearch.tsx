@@ -29,6 +29,25 @@ import { Trash2, Search } from "lucide-react";
 // import { useAuth } from "@/context/AuthContext";
 import Class from "./Class";
 import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
+
+// Fetch and log remote class info (description + seats) when a class entry is clicked
+async function fetchAndLogClassInfo(dept: string, code: string) {
+  try {
+    const resp = await fetch(`/api/getClassInfo`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        subject: `${dept} ${code}`,
+        term: "4262",
+        fetchRemote: true,
+      }),
+    });
+    const data = await resp.json();
+    console.log("[ClassSearch] Parsed remote class info:", data);
+  } catch (err) {
+    console.error("[ClassSearch] Failed to fetch remote class info:", err);
+  }
+}
 export default function ClassSearch() {
   // Get schedule builder context
   const { draftSchedule, removeClassFromDraft } = useScheduleBuilder();
@@ -42,7 +61,9 @@ export default function ClassSearch() {
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const dropdownRef = useRef<HTMLUListElement | null>(null);
-  const [dropdownPosStyle, setDropdownPosStyle] = useState<React.CSSProperties | undefined>(undefined);
+  const [dropdownPosStyle, setDropdownPosStyle] = useState<
+    React.CSSProperties | undefined
+  >(undefined);
 
   // Floating UI setup
   const { x, y, strategy, refs, update, middlewareData } = useFloating({
@@ -100,14 +121,12 @@ export default function ClassSearch() {
   // Scroll highlighted item into view
   useEffect(() => {
     if (!dropdownRef.current || !dropdownOpen) return;
-    const listItems = dropdownRef.current.querySelectorAll('li');
+    const listItems = dropdownRef.current.querySelectorAll("li");
     const highlightedItem = listItems[highlightedIndex];
     if (highlightedItem) {
-      highlightedItem.scrollIntoView({ block: 'nearest' });
+      highlightedItem.scrollIntoView({ block: "nearest" });
     }
   }, [highlightedIndex, dropdownOpen]);
-
-  
 
   function handleDropdownSelect(uuid: string) {
     const isAlreadyPresent = selectedClasses.some((cls) => cls.uuid === uuid);
@@ -282,18 +301,25 @@ export default function ClassSearch() {
                   </div>
                 ) : (
                   selectedClasses.map((c) => (
-                    <div key={c.uuid} className="relative group">
+                    <div
+                      key={c.uuid}
+                      className="relative group"
+                      onClick={() =>
+                        fetchAndLogClassInfo(c.dept || "", c.code || "")
+                      }
+                    >
                       <Class
                         uuid={c.uuid}
                         classcode={c.code || ""}
                         dept={c.dept || ""}
                       />
                       <button
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setSelectedClasses((prev) =>
                             prev.filter((cls) => cls.uuid !== c.uuid)
-                          )
-                        }
+                          );
+                        }}
                         className="absolute top-3 right-3 cursor-pointer rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[#080808]/80 hover:bg-[#181818]"
                         title="Remove from searched"
                       >

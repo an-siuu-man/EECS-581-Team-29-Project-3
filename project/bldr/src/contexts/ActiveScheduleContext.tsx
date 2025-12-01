@@ -44,11 +44,14 @@ export const ActiveScheduleProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const { user, session, loading } = useAuth();
+  const authContext = useAuth();
 
   // Track the previous user ID to detect user changes
   const prevUserIdRef = useRef<string | null | undefined>(undefined);
 
+  const user = authContext?.user || null;
+  const session = authContext?.session || null;
+  const loading = authContext?.loading ?? true;
   // Helper to sync state with localStorage
   const usePersistedState = <T,>(key: string, initialValue: T) => {
     const [state, setState] = useState<T>(() => {
