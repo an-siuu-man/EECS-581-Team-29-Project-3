@@ -40,7 +40,7 @@ export default function Class(props: ClassProps) {
     const r = await fetch(`/api/getClassInfo`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subject: `${dept} ${code}`, term: "4259" }),
+      body: JSON.stringify({ subject: `${dept} ${code}`, term: "4262" }),
     });
     const d = await r.json();
     setClassInfo(d);

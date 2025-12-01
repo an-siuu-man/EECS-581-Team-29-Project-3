@@ -298,7 +298,7 @@ export default function Builder() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-dmsans mb-2">Loading...</h2>
+          <h2 className="text-2xl flex gap-2 items-center font-dmsans mb-2"><Spinner className="h-6 w-6" /> Loading...</h2>
           <p className="text-[#A8A8A8] font-inter">Please wait</p>
         </div>
       </div>
@@ -345,13 +345,13 @@ export default function Builder() {
                     </p>
                   </div>
                 </div>
-                <button
+                {/* <button
                   onClick={() => setShowGuestBanner(false)}
                   className="text-yellow-500 hover:text-yellow-300 p-1 rounded transition cursor-pointer"
                   aria-label="Dismiss banner"
                 >
                   <X className="h-5 w-5" />
-                </button>
+                </button> */}
               </motion.div>
             )}
           </AnimatePresence>
