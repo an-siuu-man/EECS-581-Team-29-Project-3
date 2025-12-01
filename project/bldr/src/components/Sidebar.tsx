@@ -35,6 +35,8 @@ import {
 import toastStyle from "@/components/ui/toastStyle";
 import { set } from "date-fns";
 import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
+import { se } from "date-fns/locale";
+import { Spinner } from "./ui/spinner";
 
 export function Sidebar() {
   const { user, session } = useAuth();
@@ -53,6 +55,7 @@ export function Sidebar() {
   const { clearDraft, draftSchedule, draftScheduleName, setDraftScheduleName } =
     useScheduleBuilder();
   const [open, setOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [newScheduleName, setNewScheduleName] = useState("");
   const [hoveredScheduleId, setHoveredScheduleId] = useState<string | null>(
     null
@@ -67,6 +70,7 @@ export function Sidebar() {
   };
 
   const handleCreateSchedule = async (newScheduleName: string) => {
+    setLoading(true);
     const scheduleName = newScheduleName.trim() || "Untitled";
     try {
       const response = await fetch("/api/createSchedule", {
@@ -97,6 +101,7 @@ export function Sidebar() {
       };
       addScheduleToList(newSchedule);
       setNewScheduleName("");
+      setLoading(false);
     } catch (error) {
       console.error("Error creating schedule:", error);
       toast.error("Failed to create schedule", {
@@ -325,12 +330,13 @@ export function Sidebar() {
                         />
                         <Button
                           type="submit"
+                          disabled={loading}
                           onClick={() => {
                             handleCreateSchedule(newScheduleName);
                           }}
                           className="bg-[#fafafa] text-xs text-[#1a1a1a] hover:bg-[#404040] hover:text-[#fafafa] cursor-pointer font-dmsans text-md"
                         >
-                          Create
+                          {loading ? <><Spinner /> Creating...</> : "Create"}
                         </Button>
                       </div>
 

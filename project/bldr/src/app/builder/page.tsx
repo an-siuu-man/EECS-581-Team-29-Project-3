@@ -81,12 +81,18 @@ export default function Builder() {
     if (!isHydrated) return;
 
     if (draftSchedule.length > 0) {
-      const totalCreditHours = draftSchedule
-        .filter(
-          (cls: any) => cls.component === "LEC" || cls.component === "LAB"
-        )
-        .map((cls: any) => Number(cls.credithours) || 0)
-        .reduce((a: number, b: number) => a + b, 0);
+      // Use exactly one section per class (dept + code combination) for credit hours
+      const seenClasses = new Set<string>();
+      let totalCreditHours = 0;
+
+      for (const cls of draftSchedule) {
+        const classKey = `${cls.dept}-${cls.code}`;
+        if (!seenClasses.has(classKey)) {
+          seenClasses.add(classKey);
+          totalCreditHours += Number(cls.credithours) || 0;
+        }
+      }
+
       setCreditHours(totalCreditHours);
     } else {
       setCreditHours(0);
