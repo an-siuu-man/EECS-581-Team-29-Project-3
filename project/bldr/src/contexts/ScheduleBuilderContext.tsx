@@ -313,11 +313,8 @@ export const ScheduleBuilderProvider = ({ children }: any) => {
 
   const clearDraft = () => {
     setDraftSchedule([]);
-    setDraftScheduleName("");
-    setDraftSemester("");
-    setDraftYear("");
     setIsEditingExisting(false);
-    setExistingScheduleId(null);
+    // setExistingScheduleId(null);
   };
 
   const loadExistingScheduleIntoDraft = (schedule: any) => {

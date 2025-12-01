@@ -94,6 +94,7 @@ export async function POST(req: Request) {
         code: sections[0].code,
         title: sections[0].title,
         description: null, // Description not stored in DB
+        
         sections: courseSections,
       },
     ];

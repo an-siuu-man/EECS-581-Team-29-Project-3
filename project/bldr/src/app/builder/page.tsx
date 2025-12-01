@@ -8,7 +8,15 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { LogOut, AlertCircle, Trash2, X, Check, Save } from "lucide-react";
+import {
+  LogOut,
+  AlertCircle,
+  Trash2,
+  X,
+  Check,
+  Save,
+  CheckCheck,
+} from "lucide-react";
 import toastStyle from "@/components/ui/toastStyle";
 import ClassSearch from "@/components/ClassSearch";
 import { Sidebar } from "@/components/Sidebar";
@@ -74,7 +82,9 @@ export default function Builder() {
 
     if (draftSchedule.length > 0) {
       const totalCreditHours = draftSchedule
-        .filter((cls: any) => cls.component == "LEC")
+        .filter(
+          (cls: any) => cls.component === "LEC" || cls.component === "LAB"
+        )
         .map((cls: any) => Number(cls.credithours) || 0)
         .reduce((a: number, b: number) => a + b, 0);
       setCreditHours(totalCreditHours);
@@ -122,14 +132,14 @@ export default function Builder() {
       return;
     }
 
-    if (draftSchedule.length === 0) {
-      toast.error("Cannot save an empty schedule", {
-        style: { ...toastStyle },
-        duration: 3000,
-        icon: <AlertCircle className="h-5 w-5" />,
-      });
-      return;
-    }
+    // if (draftSchedule.length === 0) {
+    //   toast.error("Cannot save an empty schedule", {
+    //     style: { ...toastStyle },
+    //     duration: 3000,
+    //     icon: <AlertCircle className="h-5 w-5" />,
+    //   });
+    //   return;
+    // }
 
     setIsSaving(true);
 
@@ -306,7 +316,7 @@ export default function Builder() {
                     layout
                     initial={false}
                     transition={{ layout: { duration: 0.22, ease: "easeOut" } }}
-                    className="bg-[#404040] rounded-full py-1 px-2 inline-flex items-center"
+                    className="bg-white text-gray-950 rounded-full py-1 px-3 inline-flex items-center"
                   >
                     <span className="md:whitespace-nowrap">
                       Total Credit Hours:
@@ -322,7 +332,7 @@ export default function Builder() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 6, scale: 0.98 }}
                         transition={{ duration: 0.22 }}
-                        className="bg-green-600 text-[#333] rounded-full py-1 px-2"
+                        className="bg-green-800 text-green-300 rounded-full py-1 px-3"
                       >
                         Saved schedule
                       </motion.div>
@@ -335,7 +345,7 @@ export default function Builder() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 6, scale: 0.98 }}
                         transition={{ duration: 0.22 }}
-                        className="rounded-full py-1 px-2 text-[#333] bg-yellow-500"
+                        className="rounded-full py-1 px-2 text-yellow-300 bg-yellow-800"
                       >
                         Unsaved changes
                       </motion.div>
@@ -346,7 +356,7 @@ export default function Builder() {
                   <Button
                     onClick={handleSaveSchedule}
                     className="font-dmsans cursor-pointer w-full md:w-auto max-w-[600px]"
-                    disabled={draftSchedule.length === 0 || isSaving}
+                    disabled={isSaving || schedulesMatch}
                   >
                     {isSaving ? (
                       <>
@@ -355,9 +365,17 @@ export default function Builder() {
                       </>
                     ) : (
                       <>
-                        {" "}
-                        <Save className="h-4 w-4 mr-2" />
-                        Save Schedule
+                        {!schedulesMatch ? (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Save Schedule
+                          </>
+                        ) : (
+                          <>
+                            <CheckCheck className="text-green-600" />
+                            Synced
+                          </>
+                        )}
                       </>
                     )}
                   </Button>
