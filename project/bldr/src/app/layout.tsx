@@ -6,6 +6,7 @@ import { ScheduleBuilderProvider } from "@/contexts/ScheduleBuilderContext";
 import { ActiveScheduleProvider } from "@/contexts/ActiveScheduleContext";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,7 +38,8 @@ const figtree = Figtree({
 
 export const metadata: Metadata = {
   title: "bldr: Flagship Schedule Builder",
-  description: "This is a student-led effort to ease the schedule building process for college students.",
+  description:
+    "This is a student-led effort to ease the schedule building process for college students.",
 };
 
 export default function RootLayout({
@@ -50,6 +52,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${inter.variable} ${figtree.variable} ${dmsans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-3YGNZZCQGY"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-3YGNZZCQGY');`}
+        </Script>
+
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
