@@ -18,6 +18,7 @@ import {
   CheckCheck,
   AlertTriangle,
   UserPlus,
+  Info,
 } from "lucide-react";
 import toastStyle from "@/components/ui/toastStyle";
 import ClassSearch from "@/components/ClassSearch";
@@ -298,7 +299,9 @@ export default function Builder() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <h2 className="text-2xl flex gap-2 items-center font-dmsans mb-2"><Spinner className="h-6 w-6" /> Loading...</h2>
+          <h2 className="text-2xl flex gap-2 items-center font-dmsans mb-2">
+            <Spinner className="h-6 w-6" /> Loading...
+          </h2>
           <p className="text-[#A8A8A8] font-inter">Please wait</p>
         </div>
       </div>
@@ -319,6 +322,27 @@ export default function Builder() {
         <div className="max-w-7xl mx-auto">
           {/* Guest Warning Banner */}
           <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="mb-6 bg-blue-900/40 border border-blue-600/50 rounded-lg p-4 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <Info className="h-5 w-5 text-white shrink-0" />
+                <div>
+                  <p className="text-blue-200 font-inter">
+                    <span className="font-figtree">
+                      Please note that this app is still in{" "}
+                      <span className="font-mono">beta</span>. We will be
+                      continuously improving the experience and adding new
+                      features, so please bear with us!
+                    </span>{" "}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
             {isGuest && showGuestBanner && (
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -345,13 +369,6 @@ export default function Builder() {
                     </p>
                   </div>
                 </div>
-                {/* <button
-                  onClick={() => setShowGuestBanner(false)}
-                  className="text-yellow-500 hover:text-yellow-300 p-1 rounded transition cursor-pointer"
-                  aria-label="Dismiss banner"
-                >
-                  <X className="h-5 w-5" />
-                </button> */}
               </motion.div>
             )}
           </AnimatePresence>
@@ -413,7 +430,7 @@ export default function Builder() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 6, scale: 0.98 }}
                         transition={{ duration: 0.22 }}
-                        className="bg-green-800 text-green-300 rounded-full py-1 px-3"
+                        className="bg-green-800/50 border border-green-600/50  text-green-300 rounded-full py-1 px-3"
                       >
                         Saved schedule
                       </motion.div>
@@ -426,7 +443,7 @@ export default function Builder() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 6, scale: 0.98 }}
                         transition={{ duration: 0.22 }}
-                        className="rounded-full py-1 px-2 text-yellow-300 bg-yellow-800"
+                        className="rounded-full py-1 px-2 text-yellow-200 bg-yellow-800/40 border border-yellow-600/50 "
                       >
                         Unsaved changes
                       </motion.div>

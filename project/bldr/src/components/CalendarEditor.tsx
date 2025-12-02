@@ -137,14 +137,54 @@ const CalendarEditor = () => {
                                     <TooltipContent
                                       className="font-figtree"
                                       side="top"
+                                      style={{
+                                        borderTopWidth: "2px",
+                                        borderColor: colors[colorIndex],
+                                      }}
                                     >
-                                      <p>
-                                        {cls.dept} {cls.code} ({cls.component})
-                                      </p>
-                                      <p>{cls.instructor || "Staff"}</p>
-                                      <div className="flex">
-                                        <p className="mr-4">#{cls.classID}</p>
-                                        <p>{cls.days}</p>
+                                      <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                          {/* <p className="text-sm font-bold text-slate-100 truncate">
+                                            {cls.dept} {cls.code} <span className="font-normal text-slate-300">({cls.component})</span>
+                                          </p> */}
+                                        </div>
+
+                                        <p className="text-xs text-slate-300">
+                                          <span className="font-semibold text-slate-200">
+                                            Instructor:{" "}
+                                          </span>
+                                          <span className="text-slate-100">
+                                            {cls.instructor || "Staff"}
+                                          </span>
+                                        </p>
+
+                                        <p className="text-xs text-slate-300">
+                                          <span className="font-semibold text-slate-200">
+                                            Room:{" "}
+                                          </span>
+                                          <span className="text-slate-100">
+                                            {cls.room || "TBA"}
+                                          </span>
+                                        </p>
+
+                                        <div className="flex items-center text-xs text-slate-300">
+                                          <p className="mr-4">
+                                            <span className="font-semibold text-slate-200">
+                                              ID{" "}
+                                            </span>
+                                            <span className="text-slate-100">
+                                              #{cls.classID}
+                                            </span>
+                                          </p>
+                                          <p>
+                                            <span className="font-semibold text-slate-200">
+                                              Days{" "}
+                                            </span>
+                                            <span className="text-slate-100">
+                                              {cls.days}
+                                            </span>
+                                          </p>
+                                        </div>
                                       </div>
                                     </TooltipContent>
                                   </Tooltip>
