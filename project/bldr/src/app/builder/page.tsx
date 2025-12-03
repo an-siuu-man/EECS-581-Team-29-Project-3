@@ -321,57 +321,6 @@ export default function Builder() {
       <div className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Guest Warning Banner */}
-          <AnimatePresence>
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="mb-6 bg-blue-900/40 border border-blue-600/50 rounded-lg p-4 flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <Info className="h-5 w-5 text-white shrink-0" />
-                <div>
-                  <p className="text-blue-200 font-inter">
-                    <span className="font-figtree">
-                      Please note that this app is still in{" "}
-                      <span className="font-mono">beta</span>. We will be
-                      continuously improving the experience and adding new
-                      features, so please bear with us!
-                    </span>{" "}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-            {isGuest && showGuestBanner && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="mb-6 bg-yellow-900/40 border border-yellow-600/50 rounded-lg p-4 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0" />
-                  <div>
-                    <p className="text-yellow-200 font-inter text-sm">
-                      <span className="font-semibold">
-                        You're using guest mode.
-                      </span>{" "}
-                      Your schedules will be lost when you close this tab.{" "}
-                      <Link
-                        href="/upgrade"
-                        className="underline hover:text-yellow-100 font-medium"
-                      >
-                        Create an account
-                      </Link>{" "}
-                      to save them permanently.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {/* Header */}
           <div className="flex justify-between items-center">
@@ -397,7 +346,57 @@ export default function Builder() {
               Logout
             </Button>
           </div>
-
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="mb-6 bg-blue-900/40 border border-blue-600/50 rounded-lg p-4 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <Info className="h-5 w-5 text-white shrink-0" />
+                <div>
+                  <p className="text-blue-200 font-inter text-sm">
+                    <span className="font-figtree">
+                      Please note that this app is still in{" "}
+                      <span className="font-mono">beta</span>. We will be
+                      continuously improving the experience and adding new
+                      features, so kindly bear with us!
+                    </span>{" "}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+            {isGuest && showGuestBanner && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="mb-6 bg-yellow-900/40 border border-yellow-600/50 rounded-lg p-4 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0" />
+                  <div>
+                    <p className="text-yellow-200 font-figtree text-sm">
+                      <span className="font-semibold">
+                        You're using guest mode.
+                      </span>{" "}
+                      Your schedules will be lost when you close this tab.{" "}
+                      <Link
+                        href="/upgrade"
+                        className="underline hover:text-yellow-100 font-medium"
+                      >
+                        Create an account
+                      </Link>{" "}
+                      to save them permanently.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {/* Main Grid Layout */}
           <div className="grid grid-cols-[3fr_7fr] gap-6">
             {/* Class Search Section */}
