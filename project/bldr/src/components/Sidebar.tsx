@@ -260,8 +260,6 @@ export function Sidebar() {
     );
   };
 
-  // Framer-motion variants removed for sidebar list (using plain list now)
-
   return (
     <div
       className={`${
@@ -275,7 +273,7 @@ export function Sidebar() {
             : "bg-transparent min-w-20 max-w-20"
         } overflow-hidden p-5`}
       >
-        {/* Top section: toggle & search */}
+        {/* Top section */}
         <div>
           <div className="buttons-container flex items-center justify-between mb-5">
             <SidebarIcon
@@ -286,7 +284,9 @@ export function Sidebar() {
               onClick={toggleSidebar}
             />
           </div>
+              </div>
 
+        <div className="main-content flex-grow flex flex-col justify-between">
           {/* Main Sidebar Content */}
           <AnimatePresence>
             {open && (
@@ -516,7 +516,7 @@ export function Sidebar() {
                 <motion.div
                   initial={{ opacity: 0, translateY: 40 }}
                   animate={{ opacity: 1, translateY: 0 }}
-                  exit={{ opacity: 0, translateY: 40 }}
+                  exit={{ opacity: 0, translateY: -40 }}
                   key={user?.email || "guest"}
                   className="font-figtree text-md"
                 >
