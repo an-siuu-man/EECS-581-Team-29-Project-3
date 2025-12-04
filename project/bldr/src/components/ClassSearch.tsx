@@ -1,3 +1,23 @@
+/**
+ * ClassSearch.tsx
+ * 
+ * A comprehensive class search component that allows users to search for courses,
+ * view search results, and manage their selected classes. This is the primary
+ * interface for building a schedule.
+ * 
+ * Features:
+ * - Real-time search with debounced API calls (400ms delay)
+ * - Floating dropdown with search results using Floating UI
+ * - Keyboard navigation (Arrow keys, Enter, Escape)
+ * - Two accordion sections:
+ *   1. Searched: Shows detailed info for classes the user has explored
+ *   2. Currently Selected: Shows classes added to the draft schedule
+ * - Ability to remove classes from both sections
+ * - Grouped display of class sections by course
+ * - Accessible with ARIA roles and keyboard support
+ * 
+ * @component
+ */
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -26,25 +46,51 @@ import {
 } from "@/components/ui/tooltip";
 import { SearchedClass } from "@/types";
 import { Trash2, Search } from "lucide-react";
-// import { useAuth } from "@/context/AuthContext";
 import Class from "./Class";
 import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
+
+/**
+ * ClassSearch Component
+ * 
+ * Provides the main interface for searching and selecting classes.
+ * Manages both the search functionality and the display of selected classes.
+ * 
+ * @returns {JSX.Element} The class search panel with search input and accordion sections
+ */
 export default function ClassSearch() {
-  // Get schedule builder context
+  // Access schedule builder context for draft schedule management
   const { draftSchedule, removeClassFromDraft } = useScheduleBuilder();
 
-  // Fallback local state (was previously coming from a context like useAuth)
+  // Classes that the user has selected from search results to view details
   const [selectedClasses, setSelectedClasses] = useState<SearchedClass[]>([]);
 
+  // Search results from the API
   const [classes, setClasses] = useState<SearchedClass[]>([]);
+  
+  // Current search input value
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Controls visibility of the search results dropdown
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  
+  // Currently highlighted item index for keyboard navigation
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  
+  // Refs for DOM elements used by Floating UI
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const dropdownRef = useRef<HTMLUListElement | null>(null);
+  
+  // Dynamic positioning styles for the dropdown
   const [dropdownPosStyle, setDropdownPosStyle] = useState<React.CSSProperties | undefined>(undefined);
 
-  // Floating UI setup
+  /**
+   * Floating UI configuration for the search results dropdown.
+   * - offset: 6px gap between input and dropdown
+   * - flip: Automatically flips to top if no room below
+   * - shift: Keeps dropdown within viewport bounds
+   * - size: Matches dropdown width to input and limits max height
+   * - autoUpdate: Repositions on scroll/resize
+   */
   const { x, y, strategy, refs, update, middlewareData } = useFloating({
     placement: "bottom-start",
     middleware: [
@@ -53,7 +99,7 @@ export default function ClassSearch() {
       shift({ padding: 8 }),
       size({
         apply({ rects, availableWidth, availableHeight, elements }) {
-          // match the reference width and clamp to availableWidth
+          // Match the input width and respect available space
           const width = Math.min(rects.reference.width, availableWidth - 8);
           Object.assign(elements.floating.style, {
             width: `${width}px`,
@@ -66,6 +112,11 @@ export default function ClassSearch() {
     whileElementsMounted: autoUpdate,
   });
 
+  /**
+   * Debounced search effect.
+   * Waits 400ms after the user stops typing before making an API call.
+   * This prevents excessive API requests while typing.
+   */
   useEffect(() => {
     const delay = setTimeout(() => {
       if (!searchQuery.trim()) {
@@ -80,24 +131,24 @@ export default function ClassSearch() {
         .then((r) => r.json())
         .then((d) => {
           setClasses(d || []);
-          setHighlightedIndex(0); // Reset highlight when new results come in
+          setHighlightedIndex(0); // Reset highlight on new results
         })
         .catch(() => setClasses([]));
     }, 400);
     return () => clearTimeout(delay);
   }, [searchQuery]);
 
-  // Attach floating refs when wrapper is available and update position when open
+  // Initialize Floating UI reference element
   useEffect(() => {
     refs.setReference(wrapperRef.current);
   }, [refs]);
 
+  // Update dropdown position when it opens or results change
   useEffect(() => {
-    // update floating position when dropdown opens or class list changes
     if (dropdownOpen) update?.();
   }, [dropdownOpen, classes.length, update]);
 
-  // Scroll highlighted item into view
+  // Ensure the highlighted item is visible in the dropdown (keyboard navigation)
   useEffect(() => {
     if (!dropdownRef.current || !dropdownOpen) return;
     const listItems = dropdownRef.current.querySelectorAll('li');
@@ -107,16 +158,24 @@ export default function ClassSearch() {
     }
   }, [highlightedIndex, dropdownOpen]);
 
-  
-
+  /**
+   * Handles selection of a class from the search dropdown.
+   * Toggles the class in the selectedClasses list:
+   * - If already selected, removes it
+   * - If not selected, adds it to the beginning of the list
+   * 
+   * @param {string} uuid - The unique identifier of the selected class
+   */
   function handleDropdownSelect(uuid: string) {
     const isAlreadyPresent = selectedClasses.some((cls) => cls.uuid === uuid);
     if (isAlreadyPresent) {
+      // Remove class if already in the list (toggle behavior)
       setSelectedClasses((prevClasses) =>
         prevClasses.filter((item) => item.uuid !== uuid)
       );
       console.log(selectedClasses);
     } else {
+      // Add new class to the beginning of the list
       const newClass = classes.find((c) => c.uuid === uuid);
       if (newClass) {
         setSelectedClasses((prevClasses) => [

@@ -1,8 +1,32 @@
+/**
+ * API Route: /api/deactivateSchedule
+ * 
+ * Deactivates a user's schedule by setting its isactive flag to false.
+ * This removes the schedule from the user's active view without deleting it.
+ * 
+ * @method POST
+ * @requires Authorization header with Bearer token
+ * @body { scheduleId: string } - The UUID of the schedule to deactivate
+ * @returns { message: string, schedule: object } - Success message with updated schedule data
+ * 
+ * @throws 401 - Unauthorized (missing/invalid auth header)
+ * @throws 400 - Missing scheduleId in request body
+ * @throws 404 - Schedule not found or user doesn't own it
+ * @throws 500 - Database error or unexpected server error
+ */
 import { supabase } from "../../lib/supabaseClient";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * POST handler for deactivating a schedule.
+ * Verifies user ownership before updating the schedule status.
+ * 
+ * @param {NextRequest} req - The incoming request with scheduleId in body
+ * @returns {NextResponse} JSON response with result or error
+ */
 export async function POST(req: NextRequest) {
   try {
+    // Extract and validate authorization header
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       return NextResponse.json(
@@ -11,6 +35,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Verify user authentication with Supabase
     const {
       data: { user },
       error: authError,
@@ -20,6 +45,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Parse request body for scheduleId
     const body = await req.json();
     const { scheduleId } = body;
 
@@ -30,7 +56,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify ownership and update isactive in userschedule table
+    // Verify user owns this schedule before deactivating
     const { data: ownership, error: ownershipError } = await supabase
       .from("userschedule")
       .select("scheduleid")
@@ -49,7 +75,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Set isactive to false
+    // Update isactive flag to false
     const { data, error } = await supabase
       .from("userschedule")
       .update({ isactive: false })

@@ -1,8 +1,35 @@
+/**
+ * API Route: /api/renameSchedule
+ * 
+ * Renames an existing schedule by updating its schedulename field.
+ * Verifies user ownership before allowing the rename operation.
+ * 
+ * @method POST
+ * @requires Authorization header with Bearer token
+ * @body {
+ *   scheduleId: string, // UUID of the schedule to rename
+ *   newName: string     // The new name for the schedule
+ * }
+ * @returns { message: string, schedule: object }
+ * 
+ * @throws 401 - Unauthorized (missing/invalid auth header)
+ * @throws 400 - Missing scheduleId or newName
+ * @throws 404 - Schedule not found or user doesn't own it
+ * @throws 500 - Database error during update
+ */
 import { supabase } from "../../lib/supabaseClient";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * POST handler for renaming a schedule.
+ * Authenticates user, verifies ownership, and updates the schedule name.
+ * 
+ * @param {NextRequest} req - The incoming request with scheduleId and newName
+ * @returns {NextResponse} JSON response with updated schedule or error
+ */
 export async function POST(req: NextRequest) {
   try {
+    // Extract and validate authorization header
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       return NextResponse.json(
@@ -11,6 +38,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Verify user authentication with Supabase
     const {
       data: { user },
       error: authError,
@@ -20,9 +48,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Parse request body
     const body = await req.json();
     const { scheduleId, newName } = body;
 
+    // Validate required fields
     if (!scheduleId || !newName) {
       return NextResponse.json(
         { error: "Missing scheduleId or newName" },
@@ -30,7 +60,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify ownership in userschedule table
+    // Verify user owns this schedule before renaming
     const { data: ownership, error: ownershipError } = await supabase
       .from("userschedule")
       .select("scheduleid")
@@ -49,7 +79,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Update schedule name in allschedules table
+    // Update the schedule name in allschedules table
     const { data, error } = await supabase
       .from("allschedules")
       .update({ schedulename: newName })

@@ -1,3 +1,20 @@
+/**
+ * CalendarEditor.tsx
+ * 
+ * A visual calendar component that displays class sections in a weekly grid format.
+ * This component renders classes as colored blocks positioned according to their
+ * scheduled days and times, providing an intuitive view of the user's schedule.
+ * 
+ * Features:
+ * - Weekly calendar grid (Monday-Friday, 8AM-8PM)
+ * - Dynamic positioning of class blocks based on start time and duration
+ * - Color-coded classes based on department/course code hash
+ * - Tooltip on hover showing detailed class information (instructor, room, days, ID)
+ * - Animated transitions for adding/removing classes
+ * - Responsive design for different screen sizes
+ * 
+ * @component
+ */
 "use client";
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -11,11 +28,24 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 
+/**
+ * CalendarEditor Component
+ * 
+ * Renders a weekly calendar grid displaying the user's draft schedule.
+ * Each class section is displayed as a colored block with its position
+ * calculated based on the class's day(s) and time slot.
+ * 
+ * returns {JSX.Element} The calendar grid with positioned class blocks
+ */
 const CalendarEditor = () => {
+  // Access the draft schedule data from the ScheduleBuilder context
   const { draftSchedule, draftScheduleName } = useScheduleBuilder();
 
+  // Days of the week to display as column headers
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-  const hours = Array.from({ length: 13 }, (_, i) => 8 + i); // 8 AM to 8 PM
+  
+  // Hour slots from 8 AM to 8 PM (13 hours total)
+  const hours = Array.from({ length: 13 }, (_, i) => 8 + i);
 
   return (
     <div
@@ -87,9 +117,13 @@ const CalendarEditor = () => {
                               const offset = (startTime - hour) * baseRowHeight;
                               const height = duration * baseRowHeight;
 
-                              // Generate a color based on dept
+                              /**
+                               * Color palette for class blocks.
+                               * Colors are pastel shades for good readability with dark text.
+                               * Each class gets a consistent color based on its dept+code hash.
+                               */
                               const colors = [
-                                "#f5d2d2", // soft pink (original vibe)
+                                "#f5d2d2", // soft pink
                                 "#efd8c1", // peach
                                 "#efefc1", // pastel yellow
                                 "#d8efc1", // yellow-green
@@ -103,6 +137,11 @@ const CalendarEditor = () => {
                                 "#efc1d8", // rose
                               ];
 
+                              /**
+                               * Generate a deterministic color index from the class code.
+                               * Uses a simple hash function to ensure the same class
+                               * always gets the same color across renders.
+                               */
                               const classcode = (
                                 `${cls.dept} ${cls.code}` || ""
                               ).toUpperCase();

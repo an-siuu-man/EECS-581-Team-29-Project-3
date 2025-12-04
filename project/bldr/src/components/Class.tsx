@@ -1,3 +1,24 @@
+/**
+ * Class.tsx
+ * 
+ * A component that displays detailed information about a specific class/course,
+ * including all available sections. Users can click on a section to add it
+ * to their draft schedule.
+ * 
+ * Features:
+ * - Fetches and displays class information from the API on mount
+ * - Shows course title, description, and department/code
+ * - Lists all available sections with:
+ *   - Class ID and component type (LEC, LAB, etc.)
+ *   - Days and time information
+ *   - Instructor name
+ *   - Seat availability with color-coded indicators
+ * - Disables sections with no available seats
+ * - Animated loading state while fetching data
+ * 
+ * @component
+ * @param {ClassProps} props - Contains uuid, classcode, and dept for the class
+ */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,16 +32,38 @@ import {
 } from "@/types";
 import { useScheduleBuilder } from "@/contexts/ScheduleBuilderContext";
 import { timeToDecimal, calculateDuration } from "@/lib/timeUtils";
+
+/**
+ * Class Component
+ * 
+ * Displays a class card with all its sections. Fetches class details
+ * from the API and allows users to add sections to their schedule.
+ * 
+ * @param {ClassProps} props - The class properties (uuid, classcode, dept)
+ * @returns {JSX.Element} The class card with sections list
+ */
 export default function Class(props: ClassProps) {
+  // Access the schedule builder context to add classes
   const { addClassToDraft } = useScheduleBuilder();
+  
+  // Local state for tracking selected classes (for UI feedback)
   const [selectedClasses, setSelectedClasses] = useState<any>({});
+  
+  // State to hold the fetched class information from the API
   const [classInfo, setClassInfo] = useState<ClassInfoResponse>({ data: [] });
 
+  /**
+   * Handles when a user clicks on a class section to add it to their schedule.
+   * Combines section data with parent class data and adds to the draft schedule.
+   * 
+   * @param {ClassSection} section - The selected section's data
+   * @param {ClassData} classData - The parent class data (dept, code, title)
+   */
   const handleSectionClick = async (
     section: ClassSection,
     classData: ClassData
   ) => {
-    // Convert section to ClassSection format for calendar
+    // Merge section data with class-level data for the calendar display
     const classToAdd: ClassSection = {
       ...section,
       dept: classData.dept,
@@ -28,14 +71,22 @@ export default function Class(props: ClassProps) {
       title: classData.title,
     };
 
+    // Add the class to the draft schedule via context
     await addClassToDraft(classToAdd);
 
-    // Call parent handler if provided
+    // Notify parent component if a callback was provided
     if (props.onSectionClick) {
       props.onSectionClick(section, classData);
     }
   };
 
+  /**
+   * Fetches detailed class information from the API.
+   * Retrieves all sections for the specified department and course code.
+   * 
+   * @param {string} dept - Department code (e.g., "EECS")
+   * @param {string} code - Course code (e.g., "581")
+   */
   const callAPI = async (dept: string, code: string) => {
     const r = await fetch(`/api/getClassInfo`, {
       method: "POST",
@@ -46,10 +97,12 @@ export default function Class(props: ClassProps) {
     setClassInfo(d);
   };
 
+  // Fetch class info when component mounts
   useEffect(() => {
     callAPI(props.dept, props.classcode);
   }, []);
 
+  // Debug logging for class info updates
   useEffect(() => {
     if (classInfo) {
       console.log(classInfo);

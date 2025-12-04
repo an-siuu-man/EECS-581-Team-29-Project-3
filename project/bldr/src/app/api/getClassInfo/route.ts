@@ -1,13 +1,42 @@
+/**
+ * API Route: /api/getClassInfo
+ * 
+ * Retrieves detailed information about a specific course and all its sections.
+ * Returns course metadata (dept, code, title) along with all section details
+ * including times, instructor, room, and seat availability.
+ * 
+ * @method POST
+ * @body {
+ *   subject: string, // Format: "DEPT CODE" (e.g., "EECS 581")
+ *   term?: string    // Optional term code (not currently used)
+ * }
+ * @returns { success: true, data: Array<CourseInfo> }
+ * 
+ * @throws 400 - Missing subject or invalid format
+ * @throws 500 - Database error
+ */
 import { supabase } from "../../lib/supabaseClient";
 
+/**
+ * Parses start and end times and calculates duration in hours.
+ * Handles both 12-hour (with AM/PM) and 24-hour time formats.
+ * 
+ * @param {string} start - Start time string
+ * @param {string} end - End time string
+ * @returns {number} Duration in hours (decimal)
+ */
 function parseTimeToFloat(start: string, end: string): number {
+  /**
+   * Converts a time string to 24-hour decimal format.
+   * Handles "HH:MM" (24-hour) and "HH:MM AM/PM" (12-hour) formats.
+   */
   const to24 = (timeStr: string): number => {
-    // If already in 24-hour format (e.g., "13:30") or missing AM/PM, just parse as is
+    // If already in 24-hour format or missing AM/PM, parse directly
     if (!/AM|PM/i.test(timeStr)) {
       const [hours, minutes] = timeStr.split(":").map(Number);
       return hours + (minutes || 0) / 60;
     }
-    // Otherwise, convert from 12-hour format with AM/PM
+    // Convert from 12-hour format with AM/PM
     const [time, meridian] = timeStr.trim().split(" ");
     let [hours, minutes] = time.split(":").map(Number);
     if (meridian.toUpperCase() === "PM" && hours !== 12) hours += 12;
@@ -22,6 +51,13 @@ function parseTimeToFloat(start: string, end: string): number {
   }
 }
 
+/**
+ * POST handler for getting detailed class/course information.
+ * Fetches all sections for a given course from the database.
+ * 
+ * @param {Request} req - The incoming request with subject
+ * @returns {Response} JSON response with course and sections data
+ */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -31,7 +67,7 @@ export async function POST(req: Request) {
       return Response.json({ error: "Missing subject" }, { status: 400 });
     }
 
-    // Parse subject into dept and code (e.g., "EECS 581" -> dept="EECS", code="581")
+    // Parse subject into department and code (e.g., "EECS 581")
     const parts = subject.trim().split(/\s+/);
     if (parts.length < 2) {
       return Response.json(
@@ -43,7 +79,7 @@ export async function POST(req: Request) {
     const dept = parts[0];
     const code = parts[1];
 
-    // Fetch all sections for this course from the database
+    // Fetch all sections for this course, ordered by component and ID
     const { data: sections, error: fetchErr } = await supabase
       .from("allclasses")
       .select("*")
@@ -60,11 +96,12 @@ export async function POST(req: Request) {
       );
     }
 
+    // Return empty array if no sections found
     if (!sections || sections.length === 0) {
       return Response.json({ success: true, data: [] }, { status: 200 });
     }
 
-    // Group sections by course
+    // Transform each section into the expected format
     const courseSections = sections.map((section) => {
       const duration = parseTimeToFloat(
         section.starttime || "",
@@ -87,7 +124,7 @@ export async function POST(req: Request) {
       };
     });
 
-    // Build response with course info and its sections
+    // Build response with course info and all its sections
     const responseToFrontend = [
       {
         dept: sections[0].dept,

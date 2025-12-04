@@ -1,13 +1,39 @@
+/**
+ * API Route: /api/searchclass
+ * 
+ * Searches for classes by department, code, or title.
+ * Uses intelligent matching with relevance scoring to provide
+ * the best results first. Supports both exact matches and fuzzy searching.
+ * 
+ * @method POST
+ * @body { query: string } - The search term (e.g., "EECS", "calculus", "MATH 101")
+ * @returns Array of unique classes sorted by relevance
+ * 
+ * Search Behavior:
+ * - Department-code searches (e.g., "EECS 5") use precise prefix matching
+ * - Regular searches use broader fuzzy matching on title, dept, and code
+ * - Results are deduplicated by dept+code combination
+ * - Sorted by relevance score, then alphabetically
+ * 
+ * @throws 400 - Invalid or missing query
+ * @throws 500 - Database error
+ */
 import { supabase } from '../../lib/supabaseClient';
 
-// Normalize and prepare search terms
+/**
+ * Normalizes and analyzes the search query to determine search strategy.
+ * Detects department-code patterns for more precise matching.
+ * 
+ * @param {string} query - Raw search query from user
+ * @returns {object} Parsed search terms and strategy flags
+ */
 function prepareSearchTerms(query: string) {
   const fullPhrase = query.trim().toLowerCase();
   
-  // Check if the search looks like a department code pattern (e.g., "eecs 2", "math 101")
+  // Check if search looks like "DEPT CODE" pattern (e.g., "eecs 2", "math 101")
   const deptCodeMatch = fullPhrase.match(/^(\w+)\s+(\d+)/i);
   
-  // Then get individual words
+  // Split into individual words for multi-term matching
   const words = fullPhrase
     .split(/\s+/)
     .filter((term: string) => term.length > 0);
@@ -21,32 +47,43 @@ function prepareSearchTerms(query: string) {
   };
 }
 
+/**
+ * POST handler for searching classes.
+ * Performs database query with relevance scoring and deduplication.
+ * 
+ * @param {Request} req - The incoming request with search query
+ * @returns {Response} JSON array of matching classes
+ */
 export async function POST(req: Request) {
   try {
     const { query } = await req.json();
 
+    // Validate query parameter
     if (!query || typeof query !== 'string') {
       return Response.json({ error: 'Invalid search query' }, { status: 400 });
     }
 
+    // Parse and analyze the search query
     const { fullPhrase, words, isDeptCodeSearch, deptPrefix, codePrefix } = prepareSearchTerms(query);
     console.log('🔍 Search terms:', { fullPhrase, words, isDeptCodeSearch, deptPrefix, codePrefix });
 
+    // Return empty results for empty queries
     if (words.length === 0) {
       return Response.json([]);
     }
 
+    // Build the database query
     let queryBuilder = supabase
       .from('allclasses')
       .select('uuid, dept, code, title, days, credithours, instructor');
 
     if (isDeptCodeSearch) {
-      // For department-code searches (e.g., "eecs 2"), be more precise
+      // For department-code searches (e.g., "eecs 2"), use precise prefix matching
       queryBuilder = queryBuilder
         .ilike('dept', `${deptPrefix}%`)
         .ilike('code', `${codePrefix}%`);
     } else {
-      // For regular searches, use the previous broader matching
+      // For regular searches, use broader fuzzy matching
       queryBuilder = queryBuilder.or(
         words.length > 1
           ? `title.ilike.%${fullPhrase}%,dept.ilike.%${fullPhrase}%,code.ilike.%${fullPhrase}%,` +
@@ -66,7 +103,7 @@ export async function POST(req: Request) {
       return Response.json([]);
     }
 
-    // Deduplicate and sort results by relevance
+    // Deduplicate by dept+code and calculate relevance scores
     const seen = new Map();
     const results = [];
     
@@ -75,19 +112,19 @@ export async function POST(req: Request) {
       if (!seen.has(key)) {
         seen.set(key, true);
         
-        // Calculate match score (higher is better)
+        // Calculate match score (higher = more relevant)
         let score = 0;
         const deptLower = cls.dept.toLowerCase();
         const codeLower = cls.code.toLowerCase();
         const titleLower = cls.title.toLowerCase();
         
         if (isDeptCodeSearch) {
-          // For department-code searches, prioritize exact matches
+          // For dept-code searches, prioritize exact matches
           if (deptPrefix && codePrefix && deptLower === deptPrefix.toLowerCase() && codeLower.startsWith(codePrefix)) {
             score += 10;
           }
         } else {
-          // Full phrase matches get highest priority for regular searches
+          // Full phrase matches get highest priority
           if (titleLower.includes(fullPhrase)) {
             score += 10;
             if (titleLower.startsWith(fullPhrase)) {
@@ -95,23 +132,17 @@ export async function POST(req: Request) {
             }
           }
           
-          // Individual word matches
+          // Score individual word matches
           words.forEach((word: string) => {
-            // Exact matches in dept/code
             if (deptLower === word || codeLower === word) {
-              score += 4;
+              score += 4; // Exact match in dept/code
+            } else if (deptLower.startsWith(word) || codeLower.startsWith(word)) {
+              score += 3; // Starts with word
+            } else if (deptLower.includes(word) || codeLower.includes(word)) {
+              score += 2; // Contains word
             }
-            // Starts with word in dept/code
-            else if (deptLower.startsWith(word) || codeLower.startsWith(word)) {
-              score += 3;
-            }
-            // Contains word in dept/code
-            else if (deptLower.includes(word) || codeLower.includes(word)) {
-              score += 2;
-            }
-            // Contains word in title
             if (titleLower.includes(word)) {
-              score += 1;
+              score += 1; // Contains in title
             }
           });
         }
@@ -120,19 +151,17 @@ export async function POST(req: Request) {
       }
     }
 
-    // Sort by score (descending) and return all results
+    // Sort by score (descending), then by dept and code
     return Response.json(
       results
         .sort((a, b) => {
-          // First sort by score
           if (b.score !== a.score) {
             return b.score - a.score;
           }
-          // Then sort by department
           if (a.dept !== b.dept) {
             return a.dept.localeCompare(b.dept);
           }
-          // Finally sort by code numerically
+          // Sort by code numerically
           const aNum = parseInt(a.code) || 0;
           const bNum = parseInt(b.code) || 0;
           return aNum - bNum;

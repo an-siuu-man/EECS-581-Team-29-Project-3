@@ -1,3 +1,22 @@
+/**
+ * Sidebar.tsx
+ * 
+ * The main navigation sidebar component for the schedule builder application.
+ * Provides schedule management functionality including creating, renaming,
+ * deleting, and switching between schedules.
+ * 
+ * Features:
+ * - Collapsible sidebar with smooth animations
+ * - Create new schedules with custom names
+ * - List and filter schedules by semester
+ * - Inline schedule renaming with keyboard support
+ * - Schedule deletion with confirmation toast
+ * - User account information display
+ * - Upgrade prompt for guest users
+ * - Responsive design with toggle button
+ * 
+ * @component
+ */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -41,8 +60,20 @@ import { se } from "date-fns/locale";
 import { Spinner } from "./ui/spinner";
 import Link from "next/link";
 
+/**
+ * Sidebar Component
+ * 
+ * Renders the collapsible sidebar with schedule management controls.
+ * Integrates with multiple contexts for authentication, active schedule,
+ * and schedule builder state management.
+ * 
+ * @returns {JSX.Element} The sidebar navigation panel
+ */
 export function Sidebar() {
+  // Authentication context for user info and session
   const { user, session } = useAuth();
+  
+  // Active schedule context for managing user's schedules
   const {
     activeSchedule,
     setActiveSchedule,
@@ -55,23 +86,45 @@ export function Sidebar() {
     removeScheduleFromList,
   } = useActiveSchedule();
 
+  // Schedule builder context for draft schedule management
   const { clearDraft, draftSchedule, draftScheduleName, setDraftScheduleName } =
     useScheduleBuilder();
+    
+  // Sidebar open/closed state
   const [open, setOpen] = useState(true);
+  
+  // Loading state for async operations (e.g., creating schedules)
   const [loading, setLoading] = useState(false);
+  
+  // Input value for new schedule name
   const [newScheduleName, setNewScheduleName] = useState("");
+  
+  // Track which schedule is being hovered for showing action buttons
   const [hoveredScheduleId, setHoveredScheduleId] = useState<string | null>(
     null
   );
+  
+  // Track which schedule is in rename mode
   const [renamingScheduleId, setRenamingScheduleId] = useState<string | null>(
     null
   );
+  
+  // Input value for renaming a schedule
   const [renameValue, setRenameValue] = useState("");
 
+  /**
+   * Toggles the sidebar between open and closed states.
+   */
   const toggleSidebar = () => {
     setOpen(!open);
   };
 
+  /**
+   * Creates a new schedule via API and adds it to the local state.
+   * Defaults to "Untitled" if no name is provided.
+   * 
+   * @param {string} newScheduleName - The name for the new schedule
+   */
   const handleCreateSchedule = async (newScheduleName: string) => {
     setLoading(true);
     const scheduleName = newScheduleName.trim() || "Untitled";
@@ -115,6 +168,13 @@ export function Sidebar() {
     }
   };
 
+  /**
+   * Renames an existing schedule via API.
+   * Updates both the backend and local state on success.
+   * 
+   * @param {string} scheduleId - The ID of the schedule to rename
+   * @param {string} newName - The new name for the schedule
+   */
   const handleRenameSchedule = async (scheduleId: string, newName: string) => {
     if (!newName.trim()) {
       toast.error("Schedule name cannot be empty", {
@@ -174,16 +234,32 @@ export function Sidebar() {
     }
   };
 
+  /**
+   * Initiates the rename mode for a schedule.
+   * Sets the current name as the initial input value.
+   * 
+   * @param {any} schedule - The schedule object to rename
+   */
   const startRenaming = (schedule: any) => {
     setRenamingScheduleId(schedule.id);
     setRenameValue(schedule.name);
   };
 
+  /**
+   * Cancels the rename operation and clears the rename state.
+   */
   const cancelRenaming = () => {
     setRenamingScheduleId(null);
     setRenameValue("");
   };
 
+  /**
+   * Deletes a schedule after user confirmation.
+   * Shows a toast with confirm/cancel buttons instead of browser dialog.
+   * On confirmation, removes from both backend and local state.
+   * 
+   * @param {string} scheduleId - The ID of the schedule to delete
+   */
   const handleDeleteSchedule = async (scheduleId: string) => {
     if (!session?.access_token) {
       toast.error("You must be logged in to delete schedules", {
